@@ -132,7 +132,7 @@ export default function SignUpPage() {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Bei easy tasks registrieren
+            Bei easy-tasks registrieren
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Erstellen Sie Ihr Konto für die Aufgabenverwaltung

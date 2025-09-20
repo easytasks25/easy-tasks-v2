@@ -9,7 +9,7 @@ export default function UnauthenticatedView() {
             <span className="text-2xl">🏗️</span>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            easy tasks
+            easy-tasks
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Multi-Tenant Aufgabenverwaltung für Bauleiter

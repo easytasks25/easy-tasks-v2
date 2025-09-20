@@ -74,7 +74,7 @@ export default function SignInPage() {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Bei easy tasks anmelden
+            Bei easy-tasks anmelden
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Digitale Aufgabenverwaltung für Bauleiter
@@ -150,8 +150,8 @@ export default function SignInPage() {
               <strong>Demo-Login:</strong>
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              E-Mail: admin@easytasks.com<br />
-              Passwort: admin123
+              E-Mail: demo@easy-tasks.de<br />
+              Passwort: demo123
             </div>
           </div>
 

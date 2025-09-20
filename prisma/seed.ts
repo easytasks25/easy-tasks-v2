@@ -5,18 +5,18 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting database seed...')
 
-  // Create default admin user
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@easytasks.com' },
+  // Create default demo user
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@easy-tasks.de' },
     update: {},
     create: {
-      email: 'admin@easytasks.com',
-      name: 'Administrator',
-      password: '$2a$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJAPJjJ8J8J8J8J8J8J8', // "admin123"
+      email: 'demo@easy-tasks.de',
+      name: 'Demo Benutzer',
+      password: '$2a$12$rT.bQzjW/w6ynBbhFnjnu.cErV51Jj8dV118miVFCJLJKTvp0/xeu', // "demo123"
     },
   })
 
-  console.log('✅ Admin user created:', adminUser.email)
+  console.log('✅ Demo user created:', demoUser.email)
 
   // Create default organization
   const defaultOrg = await prisma.organization.upsert({
@@ -26,29 +26,29 @@ async function main() {
       id: 'default-org',
       name: 'easy tasks Demo',
       type: OrgType.COMPANY,
-      createdById: adminUser.id,
+      createdById: demoUser.id,
     },
   })
 
   console.log('✅ Organization created:', defaultOrg.name)
 
-  // Add admin to organization
+  // Add demo user to organization
   await prisma.userOrganization.upsert({
     where: {
       userId_organizationId: {
-        userId: adminUser.id,
+        userId: demoUser.id,
         organizationId: defaultOrg.id,
       },
     },
     update: {},
     create: {
-      userId: adminUser.id,
+      userId: demoUser.id,
       organizationId: defaultOrg.id,
       role: 'ADMIN',
     },
   })
 
-  console.log('✅ Admin added to organization')
+  console.log('✅ Demo user added to organization')
 
   // Create default project
   const defaultProject = await prisma.project.upsert({
@@ -65,23 +65,23 @@ async function main() {
 
   console.log('✅ Project created:', defaultProject.name)
 
-  // Add admin to project as owner
+  // Add demo user to project as owner
   await prisma.projectUser.upsert({
     where: {
       userId_projectId: {
-        userId: adminUser.id,
+        userId: demoUser.id,
         projectId: defaultProject.id,
       },
     },
     update: {},
     create: {
-      userId: adminUser.id,
+      userId: demoUser.id,
       projectId: defaultProject.id,
       role: ProjectRole.OWNER,
     },
   })
 
-  console.log('✅ Admin added to project')
+  console.log('✅ Demo user added to project')
 
   // Create default buckets for the project
   const defaultBuckets = [
@@ -115,7 +115,7 @@ async function main() {
     // Check if bucket already exists
     const existingBucket = await prisma.bucket.findFirst({
       where: {
-        userId: adminUser.id,
+        userId: demoUser.id,
         projectId: defaultProject.id,
         name: bucketData.name,
       },
@@ -125,7 +125,7 @@ async function main() {
       await prisma.bucket.create({
         data: {
           ...bucketData,
-          userId: adminUser.id,
+          userId: demoUser.id,
           organizationId: defaultOrg.id,
           projectId: defaultProject.id,
         },
@@ -138,7 +138,7 @@ async function main() {
   // Create sample tasks
   const sampleTasks = [
     {
-      title: 'Willkommen bei easy tasks!',
+      title: 'Willkommen bei easy-tasks!',
       description: 'Erkunden Sie die App und erstellen Sie Ihre erste Aufgabe.',
       priority: 'HIGH' as const,
       status: 'PENDING' as const,
@@ -161,12 +161,12 @@ async function main() {
     await prisma.task.create({
       data: {
         ...taskData,
-        userId: adminUser.id,
+        userId: demoUser.id,
         projectId: defaultProject.id,
         organizationId: defaultOrg.id,
         bucketId: (await prisma.bucket.findFirst({
           where: {
-            userId: adminUser.id,
+            userId: demoUser.id,
             projectId: defaultProject.id,
             name: 'Heute',
           },
