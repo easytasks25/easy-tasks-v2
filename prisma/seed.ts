@@ -112,21 +112,24 @@ async function main() {
   ]
 
   for (const bucketData of defaultBuckets) {
-    await prisma.bucket.upsert({
+    // Check if bucket already exists
+    const existingBucket = await prisma.bucket.findFirst({
       where: {
-        userId_projectId_name: {
-          userId: adminUser.id,
-          projectId: defaultProject.id,
-          name: bucketData.name,
-        },
-      },
-      update: {},
-      create: {
-        ...bucketData,
         userId: adminUser.id,
         projectId: defaultProject.id,
+        name: bucketData.name,
       },
     })
+
+    if (!existingBucket) {
+      await prisma.bucket.create({
+        data: {
+          ...bucketData,
+          userId: adminUser.id,
+          projectId: defaultProject.id,
+        },
+      })
+    }
   }
 
   console.log('✅ Default buckets created')
