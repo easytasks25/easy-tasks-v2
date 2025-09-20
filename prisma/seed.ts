@@ -105,7 +105,7 @@ async function main() {
     },
     {
       name: 'Später',
-      type: BucketType.LATER,
+      type: BucketType.CUSTOM,
       color: '#6b7280',
       order: 3,
     },
