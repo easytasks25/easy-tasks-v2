@@ -9,13 +9,19 @@ export const metadata: Metadata = {
   title: 'easy tasks - Bauleiter Aufgabenverwaltung',
   description: 'Digitale Aufgabenverwaltung für Bauleiter mit Outlook-Integration',
   manifest: '/manifest.json',
-  themeColor: '#3b82f6',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'easy tasks',
   },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#3b82f6',
 }
 
 export default function RootLayout({
