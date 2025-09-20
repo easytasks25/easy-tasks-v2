@@ -126,6 +126,7 @@ async function main() {
         data: {
           ...bucketData,
           userId: adminUser.id,
+          organizationId: defaultOrg.id,
           projectId: defaultProject.id,
         },
       })
