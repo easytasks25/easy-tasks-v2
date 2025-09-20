@@ -1,0 +1,289 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  password       String?
+  avatar         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  tasks          Task[]
+  buckets        Bucket[]
+  notes          Note[]
+  projects       ProjectUser[]
+  organizations  UserOrganization[]
+  invitations    Invitation[] @relation("InvitedBy")
+  createdOrgs    Organization[] @relation("CreatedBy")
+
+  @@map("users")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  type        OrgType  @default(COMPANY)
+  domain      String?  // Optional: "mueller-bau.de"
+  settings    Json?    // Organisation-spezifische Einstellungen
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdById String
+  createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
+  users       UserOrganization[]
+  projects    Project[]
+  invitations Invitation[]
+  tasks       Task[]
+  buckets     Bucket[]
+  notes       Note[]
+
+  @@map("organizations")
+}
+
+model UserOrganization {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationRole @default(MEMBER)
+  joinedAt       DateTime         @default(now())
+  isActive       Boolean          @default(true)
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("user_organizations")
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  email          String
+  organizationId String
+  role           OrganizationRole @default(MEMBER)
+  token          String           @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  invitedById    String
+  createdAt      DateTime         @default(now())
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@map("invitations")
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  color          String   @default("#3b82f6")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users          ProjectUser[]
+  tasks          Task[]
+  buckets        Bucket[]
+  notes          Note[]
+
+  @@map("projects")
+}
+
+model ProjectUser {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("project_users")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus @default(PENDING)
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  userId         String
+  organizationId String
+  projectId      String?
+  bucketId       String?
+  category       String?
+  assignedTo     String?
+  notes          String?
+
+  // Timestamps
+  startedAt   DateTime?
+  completedAt DateTime?
+  completedBy String?
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bucket       Bucket?      @relation(fields: [bucketId], references: [id], onDelete: SetNull)
+  attachments  Attachment[]
+  photos       Photo[]
+  voiceNotes   VoiceNote[]
+
+  @@map("tasks")
+}
+
+model Bucket {
+  id             String   @id @default(cuid())
+  name           String
+  type           BucketType @default(CUSTOM)
+  color          String   @default("#3b82f6")
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  userId         String
+  organizationId String
+  projectId      String?
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks        Task[]
+
+  @@map("buckets")
+}
+
+model Note {
+  id             String   @id @default(cuid())
+  title          String
+  content        String
+  category       String   @default("general")
+  tags           String[]
+  isPinned       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  userId         String
+  organizationId String
+  projectId      String?
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+model Attachment {
+  id       String @id @default(cuid())
+  name     String
+  type     String
+  size     Int
+  url      String
+  uploadedAt DateTime @default(now())
+
+  // Relations
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Photo {
+  id       String @id @default(cuid())
+  name     String
+  type     String
+  size     Int
+  url      String
+  uploadedAt DateTime @default(now())
+
+  // Relations
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+model VoiceNote {
+  id             String @id @default(cuid())
+  url            String
+  duration       Int
+  transcribedText String?
+  recordedAt     DateTime @default(now())
+
+  // Relations
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("voice_notes")
+}
+
+// Enums
+enum OrgType {
+  COMPANY
+  PERSONAL
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum ProjectRole {
+  OWNER
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BucketType {
+  TODAY
+  TOMORROW
+  THIS_WEEK
+  CUSTOM
+}
