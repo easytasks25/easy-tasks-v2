@@ -150,9 +150,22 @@ export default function SignInPage() {
               <strong>Demo-Login:</strong>
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              E-Mail: admin@lwtasks.com<br />
+              E-Mail: admin@easytasks.com<br />
               Passwort: admin123
             </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Noch kein Konto?{' '}
+              <button
+                type="button"
+                onClick={() => router.push('/auth/signup')}
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Hier registrieren
+              </button>
+            </p>
           </div>
         </form>
       </div>
