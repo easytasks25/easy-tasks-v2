@@ -183,20 +183,18 @@ export default function Home() {
         {view === 'buckets' && (
           <BucketBoard
             tasks={tasks}
-            onToggleTask={toggleTaskStatus}
-            onEditTask={handleEditTask}
+            onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
-            onCreateTask={() => setShowTaskForm(true)}
+            onAddTask={addTask}
           />
         )}
 
         {view === 'list' && (
           <TaskList
             tasks={tasks}
-            onToggleTask={toggleTaskStatus}
-            onEditTask={handleEditTask}
+            onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
-            onCreateTask={() => setShowTaskForm(true)}
+            onAddTask={() => setShowTaskForm(true)}
           />
         )}
 
@@ -204,11 +202,9 @@ export default function Home() {
           <CalendarView
             tasks={tasks}
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            onToggleTask={toggleTaskStatus}
-            onEditTask={handleEditTask}
-            onDeleteTask={deleteTask}
-            onCreateTask={() => setShowTaskForm(true)}
+            onDateSelect={setSelectedDate}
+            onTaskClick={handleEditTask}
+            onUpdateTask={updateTask}
           />
         )}
 
