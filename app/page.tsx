@@ -214,8 +214,13 @@ export default function Home() {
 
         {view === 'integrations' && (
           <div className="space-y-6">
-            <OutlookIntegration />
-            <EmailIntegration />
+            <OutlookIntegration 
+              tasks={tasks}
+              onTasksUpdate={setTasks}
+            />
+            <EmailIntegration 
+              onTasksCreated={(newTasks) => setTasks(prev => [...prev, ...newTasks])}
+            />
           </div>
         )}
       </main>
