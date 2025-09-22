@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, BucketType, TaskPriority, TaskStatus, OrgType, OrganizationRole, ProjectRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -28,7 +28,7 @@ async function main() {
     create: {
       id: 'demo-org-1',
       name: 'easy-tasks Demo',
-      type: 'COMPANY',
+      type: OrgType.COMPANY,
       createdById: demoUser.id,
     },
   })
@@ -47,7 +47,7 @@ async function main() {
     create: {
       userId: demoUser.id,
       organizationId: demoOrg.id,
-      role: 'ADMIN',
+      role: OrganizationRole.ADMIN,
     },
   })
 
@@ -80,7 +80,7 @@ async function main() {
     create: {
       userId: demoUser.id,
       projectId: demoProject.id,
-      role: 'OWNER',
+      role: ProjectRole.OWNER,
     },
   })
 
@@ -88,9 +88,9 @@ async function main() {
 
   // Demo-Buckets erstellen
   const demoBuckets = [
-    { name: 'Heute', type: 'TODAY', color: '#ef4444', order: 0 },
-    { name: 'Morgen', type: 'TOMORROW', color: '#f59e0b', order: 1 },
-    { name: 'Diese Woche', type: 'THIS_WEEK', color: '#3b82f6', order: 2 },
+    { name: 'Heute', type: BucketType.TODAY, color: '#ef4444', order: 0 },
+    { name: 'Morgen', type: BucketType.TOMORROW, color: '#f59e0b', order: 1 },
+    { name: 'Diese Woche', type: BucketType.THIS_WEEK, color: '#3b82f6', order: 2 },
   ]
 
   for (const bucketData of demoBuckets) {
@@ -119,8 +119,8 @@ async function main() {
     data: {
       title: 'Willkommen bei easy-tasks!',
       description: 'Erkunden Sie die App und erstellen Sie Ihre erste Aufgabe.',
-      priority: 'HIGH',
-      status: 'PENDING',
+      priority: TaskPriority.HIGH,
+      status: TaskStatus.PENDING,
       userId: demoUser.id,
       organizationId: demoOrg.id,
       projectId: demoProject.id,
