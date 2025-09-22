@@ -113,14 +113,19 @@ export default function Home() {
   }, [tasks, moveOverdueToToday, moveIncompleteTodayTasks])
 
   const addTask = (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    try {
+      const newTask: Task = {
+        ...task,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      setTasks(prev => [newTask, ...prev])
+      toast.success('Aufgabe erstellt!')
+    } catch (error) {
+      console.error('Error adding task:', error)
+      toast.error('Fehler beim Erstellen der Aufgabe')
     }
-    setTasks(prev => [newTask, ...prev])
-    toast.success('Aufgabe erstellt!')
   }
 
   const updateTask = (id: string, updates: Partial<Task>) => {
