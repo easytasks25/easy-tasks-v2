@@ -17,11 +17,11 @@ import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
 import { toast } from 'react-hot-toast'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 
 // Dynamische Imports für Components, die window verwenden könnten
-const OutlookIntegration = dynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
-const EmailIntegration = dynamic(() => import('@/components/EmailIntegration').then(mod => ({ default: mod.EmailIntegration })), { ssr: false })
+const OutlookIntegration = nextDynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
+const EmailIntegration = nextDynamic(() => import('@/components/EmailIntegration').then(mod => ({ default: mod.EmailIntegration })), { ssr: false })
 
 export default function Home() {
   const { data: session, status } = useSession()
