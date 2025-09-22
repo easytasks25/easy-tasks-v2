@@ -2,7 +2,6 @@
 
 // verhindert SSG/Prerender → Seite wird dynamisch auf dem Server gerendert
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
