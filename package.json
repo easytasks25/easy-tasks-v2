@@ -68,5 +68,8 @@
     "notizbuch"
   ],
   "author": "easy tasks",
-  "license": "MIT"
+  "license": "MIT",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
 }
