@@ -1,5 +1,9 @@
 'use client'
 
+// verhindert SSG/Prerender → Seite wird dynamisch auf dem Server gerendert
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { TaskList } from '@/components/TaskList'
@@ -15,14 +19,6 @@ import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
 import { toast } from 'react-hot-toast'
-import dynamic from 'next/dynamic'
-
-// Dynamically import components that use window
-const DynamicBucketBoard = dynamic(() => import('@/components/BucketBoard').then(mod => ({ default: mod.BucketBoard })), { ssr: false })
-const DynamicTaskList = dynamic(() => import('@/components/TaskList').then(mod => ({ default: mod.TaskList })), { ssr: false })
-const DynamicCalendarView = dynamic(() => import('@/components/CalendarView').then(mod => ({ default: mod.CalendarView })), { ssr: false })
-const DynamicOutlookIntegration = dynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
-const DynamicEmailIntegration = dynamic(() => import('@/components/EmailIntegration').then(mod => ({ default: mod.EmailIntegration })), { ssr: false })
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -191,7 +187,7 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {view === 'buckets' && (
-          <DynamicBucketBoard
+          <BucketBoard
             tasks={tasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
@@ -200,7 +196,7 @@ export default function Home() {
         )}
 
         {view === 'list' && (
-          <DynamicTaskList
+          <TaskList
             tasks={tasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
@@ -209,7 +205,7 @@ export default function Home() {
         )}
 
         {view === 'calendar' && (
-          <DynamicCalendarView
+          <CalendarView
             tasks={tasks}
             selectedDate={selectedDate}
             onDateSelect={setSelectedDate}
@@ -224,11 +220,11 @@ export default function Home() {
 
         {view === 'integrations' && (
           <div className="space-y-6">
-            <DynamicOutlookIntegration 
+            <OutlookIntegration 
               tasks={tasks}
               onTasksUpdate={setTasks}
             />
-            <DynamicEmailIntegration 
+            <EmailIntegration 
               onTasksCreated={(newTasks) => setTasks(prev => [...prev, ...newTasks])}
             />
           </div>
