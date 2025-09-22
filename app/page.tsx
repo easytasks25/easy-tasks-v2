@@ -1,8 +1,9 @@
 'use client'
 
-// verhindert SSG/Prerender → Seite wird dynamisch auf dem Server gerendert
+// verhindert SSG/Prerender → Seite wird dynamisch gerendert, kein Cache
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = false
+export const fetchCache = 'force-no-store'
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
