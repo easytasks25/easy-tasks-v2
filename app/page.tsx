@@ -27,11 +27,17 @@ export default function Home() {
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  
+  const [isClient, setIsClient] = useState(false)
+
   const { moveOverdueToToday, moveIncompleteTodayTasks, getActiveBuckets } = useBuckets()
 
+  // Hydration-Fix: Warte bis Client bereit ist
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   // Loading state
-  if (status === 'loading') {
+  if (status === 'loading' || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
