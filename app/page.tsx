@@ -2,7 +2,7 @@
 
 // verhindert SSG/Prerender → Seite wird dynamisch auf dem Server gerendert
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+export const revalidate = 0
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
@@ -13,13 +13,15 @@ import { NotesSection } from '@/components/NotesSection'
 import { QuickActions } from '@/components/QuickActions'
 import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
-import { OutlookIntegration } from '@/components/OutlookIntegration'
-import { EmailIntegration } from '@/components/EmailIntegration'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
 import { toast } from 'react-hot-toast'
-import { ClientOnly } from '@/components/ClientOnly'
+import dynamic from 'next/dynamic'
+
+// Dynamische Imports für Components, die window verwenden könnten
+const OutlookIntegration = dynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
+const EmailIntegration = dynamic(() => import('@/components/EmailIntegration').then(mod => ({ default: mod.EmailIntegration })), { ssr: false })
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -168,101 +170,92 @@ export default function Home() {
   }
 
   return (
-    <ClientOnly fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Wird geladen...</p>
-        </div>
-      </div>
-    }>
-      <div className="min-h-screen bg-gray-50">
-        {/* Offline Indicator */}
-        {isOffline && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Offline-Modus:</strong> Sie arbeiten offline. Änderungen werden synchronisiert, sobald Sie wieder online sind.
-                </p>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Offline Indicator */}
+      {isOffline && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Offline-Modus:</strong> Sie arbeiten offline. Änderungen werden synchronisiert, sobald Sie wieder online sind.
+              </p>
             </div>
           </div>
+        </div>
+      )}
+
+      <Header 
+        view={view}
+        onViewChange={setView}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        onLogout={handleLogout}
+        user={session?.user}
+      />
+
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {view === 'buckets' && (
+          <BucketBoard
+            tasks={tasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+            onAddTask={addTask}
+          />
         )}
 
-        <Header 
-          view={view}
-          onViewChange={setView}
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          onLogout={handleLogout}
-          user={session?.user}
-        />
+        {view === 'list' && (
+          <TaskList
+            tasks={tasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+            onAddTask={() => setShowTaskForm(true)}
+          />
+        )}
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          {view === 'buckets' && (
-            <BucketBoard
+        {view === 'calendar' && (
+          <CalendarView
+            tasks={tasks}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            onTaskClick={handleEditTask}
+            onUpdateTask={updateTask}
+          />
+        )}
+
+        {view === 'notes' && (
+          <NotesSection />
+        )}
+
+        {view === 'integrations' && (
+          <div className="space-y-6">
+            <OutlookIntegration 
               tasks={tasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-              onAddTask={addTask}
+              onTasksUpdate={setTasks}
             />
-          )}
-
-          {view === 'list' && (
-            <TaskList
-              tasks={tasks}
-              onUpdateTask={updateTask}
-              onDeleteTask={deleteTask}
-              onAddTask={() => setShowTaskForm(true)}
+            <EmailIntegration 
+              onTasksCreated={(newTasks) => setTasks(prev => [...prev, ...newTasks])}
             />
-          )}
+          </div>
+        )}
+      </main>
 
-          {view === 'calendar' && (
-            <CalendarView
-              tasks={tasks}
-              selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-              onTaskClick={handleEditTask}
-              onUpdateTask={updateTask}
-            />
-          )}
-
-          {view === 'notes' && (
-            <NotesSection />
-          )}
-
-          {view === 'integrations' && (
-            <div className="space-y-6">
-              <OutlookIntegration 
-                tasks={tasks}
-                onTasksUpdate={setTasks}
-              />
-              <EmailIntegration 
-                onTasksCreated={(newTasks) => setTasks(prev => [...prev, ...newTasks])}
-              />
-            </div>
-          )}
-        </main>
-
-        <TaskForm
-          onSubmit={(data) => {
-            if (editingTask) {
-              updateTask(editingTask.id, data)
-            } else {
-              addTask(data as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>)
-            }
-          }}
-          isOpen={showTaskForm}
-          onClose={() => {
-            setShowTaskForm(false)
-            setEditingTask(null)
-          }}
-          initialData={editingTask}
-          buckets={getActiveBuckets()}
-          defaultBucketId={getActiveBuckets().find(b => b.type === 'today')?.id}
-        />
-      </div>
-    </ClientOnly>
+      <TaskForm
+        onSubmit={(data) => {
+          if (editingTask) {
+            updateTask(editingTask.id, data)
+          } else {
+            addTask(data as Omit<Task, 'id' | 'createdAt' | 'updatedAt'>)
+          }
+        }}
+        isOpen={showTaskForm}
+        onClose={() => {
+          setShowTaskForm(false)
+          setEditingTask(null)
+        }}
+        initialData={editingTask}
+        buckets={getActiveBuckets()}
+        defaultBucketId={getActiveBuckets().find(b => b.type === 'today')?.id}
+      />
+    </div>
   )
 }
