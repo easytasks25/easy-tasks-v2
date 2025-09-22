@@ -24,6 +24,11 @@ export const viewport = {
   themeColor: '#3b82f6',
 }
 
+// Server-Rendering erzwingen & kein Caching für alle Routen
+export const dynamic = 'force-dynamic'
+export const revalidate = false
+export const fetchCache = 'force-no-store'
+
 export default function RootLayout({
   children,
 }: {
