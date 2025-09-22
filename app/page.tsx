@@ -19,7 +19,8 @@ import nextDynamic from 'next/dynamic'
 const OutlookIntegration = nextDynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
 const EmailIntegration = nextDynamic(() => import('@/components/EmailIntegration').then(mod => ({ default: mod.EmailIntegration })), { ssr: false })
 
-export default function Home() {
+// Client-Komponente für die Hauptfunktionalität
+function ClientHome() {
   const { data: session, status } = useSession()
   const [tasks, setTasks] = useLocalStorage<Task[]>('lwtasks-tasks', [])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -27,17 +28,11 @@ export default function Home() {
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [isClient, setIsClient] = useState(false)
 
   const { moveOverdueToToday, moveIncompleteTodayTasks, getActiveBuckets } = useBuckets()
 
-  // Hydration-Fix: Warte bis Client bereit ist
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
   // Loading state
-  if (status === 'loading' || !isClient) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -260,4 +255,9 @@ export default function Home() {
       />
     </div>
   )
+}
+
+// Hauptkomponente mit dynamischem Import
+export default function Home() {
+  return <ClientHome />
 }
