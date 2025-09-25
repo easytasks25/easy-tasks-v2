@@ -239,14 +239,15 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <TaskForm
-                task={editingTask}
-                onSave={(taskData) => {
+                isOpen={showTaskForm}
+                onClose={handleCloseForm}
+                onSubmit={(taskData) => {
                   if (editingTask) {
                     onUpdateTask(editingTask.id, taskData)
                   }
                   handleCloseForm()
                 }}
-                onCancel={handleCloseForm}
+                initialData={editingTask}
               />
             </div>
           </div>
