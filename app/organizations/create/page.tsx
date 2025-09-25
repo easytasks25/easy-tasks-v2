@@ -39,7 +39,7 @@ export default function CreateOrganizationPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/organizations', {
+      const response = await fetch('/api/organizations/supabase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export default function CreateOrganizationPage() {
 
       if (response.ok) {
         const organization = await response.json()
-        router.push(`/organizations/${organization.id}`)
+        router.push('/dashboard')
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Erstellen der Organisation')

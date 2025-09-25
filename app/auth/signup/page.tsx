@@ -85,7 +85,7 @@ export default function SignUpPage() {
       
       // 3. Weiterleitung zur App
       setTimeout(() => {
-        router.push('/demo')
+        router.push('/dashboard')
       }, 2000)
     } catch (error) {
       console.error('Registration error:', error)

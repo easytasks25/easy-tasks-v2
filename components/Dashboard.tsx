@@ -58,62 +58,48 @@ export function Dashboard({ tasks, user, onViewChange }: DashboardProps) {
     )
   }
 
-  // Mock-Daten für Team-Mitglieder (später aus API)
+  // Team-Mitglieder aus echten Daten berechnen
   useEffect(() => {
-    const mockTeamMembers: TeamMember[] = [
-      {
-        id: '1',
-        name: 'Max Mustermann',
-        role: 'Geschäftsführer',
-        tasks: {
-          total: 4,
-          pending: 3,
-          overdue: 1
-        }
-      },
-      {
-        id: '2',
-        name: 'Anna Schmidt',
-        role: 'Projektleiterin',
-        tasks: {
-          total: 5,
-          pending: 4,
-          overdue: 1
-        }
-      },
-      {
-        id: '3',
-        name: 'Thomas Weber',
-        role: 'Bauleiter',
-        tasks: {
-          total: 6,
-          pending: 5,
-          overdue: 1
-        }
-      },
-      {
-        id: '4',
-        name: 'Maria Müller',
-        role: 'Sachbearbeiterin',
-        tasks: {
-          total: 2,
-          pending: 2,
+    if (!tasks || tasks.length === 0) {
+      setTeamMembers([])
+      return
+    }
+
+    // Gruppiere Aufgaben nach zugewiesenen Personen
+    const memberTasks = tasks.reduce((acc, task) => {
+      const assignee = task.assignedTo || 'Nicht zugewiesen'
+      if (!acc[assignee]) {
+        acc[assignee] = {
+          total: 0,
+          pending: 0,
           overdue: 0
         }
-      },
-      {
-        id: '5',
-        name: 'Peter Klein',
-        role: 'Bauleiter',
-        tasks: {
-          total: 5,
-          pending: 4,
-          overdue: 1
+      }
+      
+      acc[assignee].total++
+      
+      if (task.status === 'pending' || task.status === 'in-progress') {
+        acc[assignee].pending++
+        
+        // Prüfe auf überfällige Aufgaben
+        if (task.dueDate && new Date(task.dueDate) < new Date()) {
+          acc[assignee].overdue++
         }
       }
-    ]
-    setTeamMembers(mockTeamMembers)
-  }, [])
+      
+      return acc
+    }, {} as Record<string, { total: number; pending: number; overdue: number }>)
+
+    // Konvertiere zu TeamMember-Array
+    const members: TeamMember[] = Object.entries(memberTasks).map(([name, taskStats], index) => ({
+      id: `member-${index}`,
+      name,
+      role: 'Mitglied', // Standard-Rolle, später aus der Datenbank
+      tasks: taskStats
+    }))
+
+    setTeamMembers(members)
+  }, [tasks])
 
   // Berechne Gesamtstatistiken
   const totalStats = teamMembers.reduce((acc, member) => ({
@@ -213,9 +199,27 @@ export function Dashboard({ tasks, user, onViewChange }: DashboardProps) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {teamMembers.map((member) => {
-                
-                return (
+              {teamMembers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <UserGroupIcon className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Noch keine Mitglieder
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Laden Sie neue Mitglieder ein, um zusammenzuarbeiten.
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/organizations/settings'}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <UserGroupIcon className="h-4 w-4 mr-2" />
+                      Mitglieder verwalten
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                teamMembers.map((member) => (
                   <tr 
                     key={member.id} 
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
@@ -248,8 +252,8 @@ export function Dashboard({ tasks, user, onViewChange }: DashboardProps) {
                       {member.tasks.overdue}
                     </td>
                   </tr>
-                )
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>

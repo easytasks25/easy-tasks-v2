@@ -122,7 +122,7 @@ export function Header({ view, onViewChange, selectedDate, onDateChange, onLogou
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  {user?.name || 'Benutzer'}
+                  {user?.name || user?.email?.split('@')[0] || 'Benutzer'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {user?.role || 'User'}
@@ -135,9 +135,17 @@ export function Header({ view, onViewChange, selectedDate, onDateChange, onLogou
               <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black dark:ring-gray-700 ring-opacity-5 focus:outline-none z-50">
                 <div className="py-1">
                   <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700">
-                    <p className="font-medium">{user?.name || 'Benutzer'}</p>
+                    <p className="font-medium">{user?.name || user?.email?.split('@')[0] || 'Benutzer'}</p>
                     <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
                   </div>
+                  
+                  <a
+                    href="/organizations/settings"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <CogIcon className="h-4 w-4 mr-3" />
+                    Organisationseinstellungen
+                  </a>
                   
                   <button
                     onClick={() => {

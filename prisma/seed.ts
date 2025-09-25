@@ -3,6 +3,12 @@ import { PrismaClient, ProjectRole, BucketType, OrgType } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+  // Nur in lokaler Entwicklung seeden
+  if (process.env.SEED_DEMO !== 'true') {
+    console.log('⏭️ Skipping demo seed in this environment')
+    process.exit(0)
+  }
+
   console.log('🌱 Starting database seed...')
 
   // Create default demo user

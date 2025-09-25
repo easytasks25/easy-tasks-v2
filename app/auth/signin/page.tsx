@@ -44,7 +44,7 @@ export default function SignInPage() {
         setError('Ungültige Anmeldedaten')
       } else {
         // Erfolgreiche Anmeldung
-        router.push('/demo')
+        router.push('/dashboard')
         router.refresh()
       }
     } catch (error) {
