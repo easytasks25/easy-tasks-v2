@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
+export const runtime = 'nodejs'
+
 type Body = { 
   name: string
   type: 'COMPANY' | 'PERSONAL'
