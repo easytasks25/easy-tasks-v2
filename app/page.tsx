@@ -37,7 +37,7 @@ export default function SimpleHome() {
             easy-tasks
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Digitale Aufgabenverwaltung für Bauleiter
+            Digitale Aufgabenverwaltung
           </p>
         </div>
 

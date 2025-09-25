@@ -1,3 +1,5 @@
+import { TaskHistoryEntry } from './taskHistory'
+
 export type TaskPriority = 'low' | 'medium' | 'high'
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled'
 
@@ -26,6 +28,8 @@ export interface Task {
   startedAt?: Date
   completedAt?: Date
   completedBy?: string
+  createdBy?: string
+  history?: TaskHistoryEntry[]
 }
 
 export interface Attachment {

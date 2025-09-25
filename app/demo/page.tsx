@@ -8,9 +8,11 @@ import { NotesSection } from '@/components/NotesSection'
 import { QuickActions } from '@/components/QuickActions'
 import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
+import { Dashboard } from '@/components/Dashboard'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
+import { useTaskHistory } from '@/hooks/useTaskHistory'
 import { toast } from 'react-hot-toast'
 import nextDynamic from 'next/dynamic'
 
@@ -31,9 +33,37 @@ const demoTasks: Task[] = [
     location: 'Musterstraße 123, 12345 Musterstadt',
     createdAt: new Date(),
     updatedAt: new Date(),
+    createdBy: 'demo-user',
     attachments: [],
     photos: [],
-    voiceNotes: []
+    voiceNotes: [],
+    history: [
+      {
+        id: 'hist-1',
+        taskId: 'task-1',
+        action: 'created',
+        timestamp: new Date(Date.now() - 86400000), // Gestern
+        userId: 'demo-user',
+        userName: 'Max Mustermann',
+        changes: {
+          description: 'Aufgabe "Baustellenbesichtigung" erstellt'
+        }
+      },
+      {
+        id: 'hist-2',
+        taskId: 'task-1',
+        action: 'priority_changed',
+        timestamp: new Date(Date.now() - 43200000), // Vor 12 Stunden
+        userId: 'demo-user',
+        userName: 'Max Mustermann',
+        changes: {
+          field: 'priority',
+          oldValue: 'medium',
+          newValue: 'high',
+          description: 'Priorität geändert von "Mittel" zu "Hoch"'
+        }
+      }
+    ]
   },
   {
     id: 'task-2',
@@ -99,19 +129,38 @@ const demoUser = {
   id: 'demo-user',
   name: 'Max Mustermann',
   email: 'max.mustermann@baubetrieb.de',
-  image: null
+  image: null,
+  role: 'manager' // Demo: Manager-Rolle für Dashboard-Zugriff
 }
 
 // Client-Komponente für die Hauptfunktionalität
 function DemoHome() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('lwtasks-demo-tasks', demoTasks)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [view, setView] = useState<'buckets' | 'list' | 'calendar' | 'notes' | 'integrations'>('buckets')
+  const [view, setView] = useState<'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'>('buckets')
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const { moveOverdueToToday, moveIncompleteTodayTasks, getActiveBuckets } = useBuckets()
+  
+  // Task-Historie Hook
+  const {
+    logTaskCreation,
+    logStatusChange,
+    logPriorityChange,
+    logAssignmentChange,
+    logNoteChange,
+    logDueDateChange,
+    logTaskUpdate,
+    updateTaskWithHistory
+  } = useTaskHistory({
+    currentUser: {
+      id: demoUser.id,
+      name: demoUser.name,
+      email: demoUser.email
+    }
+  })
 
   // Offline detection
   useEffect(() => {
@@ -144,8 +193,16 @@ function DemoHome() {
         id: crypto.randomUUID(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        createdBy: demoUser.id,
       }
-      setTasks(prev => [newTask, ...prev])
+      
+      // Logge die Erstellung
+      logTaskCreation(newTask)
+      
+      // Aktualisiere Task mit Historie
+      const taskWithHistory = updateTaskWithHistory(newTask)
+      
+      setTasks(prev => [taskWithHistory, ...prev])
       toast.success('Aufgabe erstellt!')
     } catch (error) {
       console.error('Error adding task:', error)
@@ -154,11 +211,45 @@ function DemoHome() {
   }
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, ...updates, updatedAt: new Date() }
-        : task
-    ))
+    setTasks(prev => prev.map(task => {
+      if (task.id === id) {
+        const oldTask = { ...task }
+        const updatedTask = { ...task, ...updates, updatedAt: new Date() }
+        
+        // Logge spezifische Änderungen
+        if (updates.status && updates.status !== oldTask.status) {
+          logStatusChange(id, oldTask.status, updates.status)
+        }
+        
+        if (updates.priority && updates.priority !== oldTask.priority) {
+          logPriorityChange(id, oldTask.priority, updates.priority)
+        }
+        
+        if (updates.assignedTo !== oldTask.assignedTo) {
+          logAssignmentChange(id, oldTask.assignedTo, updates.assignedTo)
+        }
+        
+        if (updates.dueDate && updates.dueDate !== oldTask.dueDate) {
+          logDueDateChange(id, oldTask.dueDate, updates.dueDate)
+        }
+        
+        if (updates.notes && updates.notes !== oldTask.notes) {
+          logNoteChange(id, 'note_updated', updates.notes)
+        }
+        
+        // Logge andere Änderungen
+        Object.keys(updates).forEach(key => {
+          if (key !== 'status' && key !== 'priority' && key !== 'assignedTo' && 
+              key !== 'dueDate' && key !== 'notes' && key !== 'updatedAt' && 
+              updates[key as keyof Task] !== oldTask[key as keyof Task]) {
+            logTaskUpdate(id, key, oldTask[key as keyof Task], updates[key as keyof Task])
+          }
+        })
+        
+        return updateTaskWithHistory(updatedTask)
+      }
+      return task
+    }))
     toast.success('Aufgabe aktualisiert!')
   }
 
@@ -237,12 +328,10 @@ function DemoHome() {
           />
         )}
 
-        {view === 'list' && (
-          <TaskList
+        {view === 'dashboard' && (
+          <Dashboard
             tasks={tasks}
-            onUpdateTask={updateTask}
-            onDeleteTask={deleteTask}
-            onAddTask={() => setShowTaskForm(true)}
+            user={demoUser}
           />
         )}
 

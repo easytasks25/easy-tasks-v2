@@ -13,15 +13,16 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   UserIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 import { TaskStats, Task } from '@/types/task'
 import { format, addDays } from 'date-fns'
 import { de } from 'date-fns/locale'
 
 interface HeaderProps {
-  view: 'buckets' | 'list' | 'calendar' | 'notes' | 'integrations'
-  onViewChange: (view: 'buckets' | 'list' | 'calendar' | 'notes' | 'integrations') => void
+  view: 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'
+  onViewChange: (view: 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard') => void
   selectedDate: Date
   onDateChange: (date: Date) => void
   onLogout: () => void
@@ -38,8 +39,8 @@ export function Header({ view, onViewChange, selectedDate, onDateChange, onLogou
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const navigation = [
-    { name: 'Buckets', view: 'buckets' as const, icon: Squares2X2Icon },
-    { name: 'Liste', view: 'list' as const, icon: ListBulletIcon },
+    { name: 'Aufgaben', view: 'buckets' as const, icon: Squares2X2Icon },
+    { name: 'Dashboard', view: 'dashboard' as const, icon: ChartBarIcon },
     { name: 'Kalender', view: 'calendar' as const, icon: CalendarDaysIcon },
     { name: 'Notizen', view: 'notes' as const, icon: DocumentTextIcon },
   ]
@@ -60,8 +61,8 @@ export function Header({ view, onViewChange, selectedDate, onDateChange, onLogou
                 <span className="text-white font-bold text-sm">ET</span>
               </div>
               <div className="ml-3">
-                <h1 className="text-xl font-semibold text-gray-900">easy tasks</h1>
-                <p className="text-xs text-gray-500">Bauleiter Aufgabenverwaltung</p>
+                <h1 className="text-xl font-semibold text-gray-900">easy-tasks</h1>
+                <p className="text-xs text-gray-500">Aufgabenverwaltung</p>
               </div>
             </div>
           </div>

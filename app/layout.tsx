@@ -6,8 +6,8 @@ import ClientProviders from '@/components/ClientProviders'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'easy-tasks - Bauleiter Aufgabenverwaltung',
-  description: 'Digitale Aufgabenverwaltung für Bauleiter mit Outlook-Integration',
+  title: 'easy-tasks - Aufgabenverwaltung',
+  description: 'Digitale Aufgabenverwaltung mit Outlook-Integration',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
