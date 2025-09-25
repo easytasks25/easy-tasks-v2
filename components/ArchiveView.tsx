@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Task, TaskStatus } from '@/types/task'
 import { TaskCard } from './TaskCard'
-import { TaskForm } from './TaskForm'
 import { 
   ArchiveBoxIcon, 
   FunnelIcon, 
@@ -23,8 +22,6 @@ interface ArchiveViewProps {
 export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
-  const [showTaskForm, setShowTaskForm] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   // Filter archived tasks
   const archivedTasks = tasks.filter(task => 
@@ -36,7 +33,12 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
     const matchesSearch = searchQuery === '' || 
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      task.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.priority.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.status.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter
 
@@ -58,15 +60,6 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
     return groups
   }, {} as Record<string, Task[]>)
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setShowTaskForm(true)
-  }
-
-  const handleCloseForm = () => {
-    setShowTaskForm(false)
-    setEditingTask(null)
-  }
 
   const handleRestoreTask = (taskId: string) => {
     onUpdateTask(taskId, { 
@@ -122,7 +115,7 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Aufgaben durchsuchen..."
+                placeholder="Titel, Beschreibung, Kategorie, Standort, Notizen durchsuchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -190,12 +183,20 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <span>Kategorie: {task.category || 'Keine'}</span>
                           <span>Priorität: {task.priority}</span>
+                          {task.location && <span>Standort: {task.location}</span>}
+                          {task.assignedTo && <span>Zugewiesen: {task.assignedTo}</span>}
                           {task.completedAt && (
                             <span>
                               Erledigt: {format(new Date(task.completedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                             </span>
                           )}
                         </div>
+                        
+                        {task.notes && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            <strong>Notizen:</strong> {task.notes}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
@@ -208,13 +209,6 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                           Wiederherstellen
                         </button>
                         
-                        <button
-                          onClick={() => handleEditTask(task)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          title="Aufgabe bearbeiten"
-                        >
-                          Bearbeiten
-                        </button>
                         
                         <button
                           onClick={() => onDeleteTask(task.id)}
@@ -233,26 +227,6 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
         </div>
       )}
 
-      {/* Task Form Modal */}
-      {showTaskForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <TaskForm
-                isOpen={showTaskForm}
-                onClose={handleCloseForm}
-                onSubmit={(taskData) => {
-                  if (editingTask) {
-                    onUpdateTask(editingTask.id, taskData)
-                  }
-                  handleCloseForm()
-                }}
-                initialData={editingTask}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
