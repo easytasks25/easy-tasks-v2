@@ -19,10 +19,11 @@ import {
 import { TaskStats, Task } from '@/types/task'
 import { format, addDays } from 'date-fns'
 import { de } from 'date-fns/locale'
+import type { View } from '@/lib/view'
 
 interface HeaderProps {
-  view: 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'
-  onViewChange: (view: 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard') => void
+  view: View
+  onViewChange: (view: View) => void
   selectedDate: Date
   onDateChange: (date: Date) => void
   onLogout: () => void

@@ -15,8 +15,7 @@ import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
 import { toast } from 'react-hot-toast'
-
-type View = 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'
+import type { View } from '@/lib/view'
 
 export default function Home() {
   const { data: session, status } = useSession()
