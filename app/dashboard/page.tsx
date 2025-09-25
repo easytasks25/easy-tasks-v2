@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import useSWR from 'swr'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/Dashboard'
 import { BucketBoard } from '@/components/BucketBoard'
@@ -27,6 +28,12 @@ interface Organization {
   userRole: string
 }
 
+// SWR Fetcher
+const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(r => {
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return r.json()
+})
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
@@ -34,7 +41,6 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [view, setView] = useState<View>('buckets')
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
   const [filterState, setFilterState] = useState<{
     type: 'status' | 'member' | 'none'
     value: string
@@ -44,6 +50,16 @@ export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClient()
   const { moveOverdueToToday, moveIncompleteTodayTasks, getActiveBuckets } = useBuckets()
+
+  // SWR für Dashboard-Daten
+  const { data: dashboardData, error: dashboardError, isLoading: dashboardLoading } = useSWR(
+    user ? '/api/dashboard' : null,
+    fetcher,
+    {
+      shouldRetryOnError: false,
+      revalidateOnFocus: false,
+    }
+  )
 
   useEffect(() => {
     checkUser()
@@ -78,7 +94,6 @@ export default function DashboardPage() {
       await loadOrganizations(authUser.id)
     } catch (error) {
       console.error('Error checking user:', error)
-      setError('Fehler beim Laden der Benutzerdaten')
       setIsLoading(false)
     }
   }
@@ -103,7 +118,6 @@ export default function DashboardPage() {
 
       if (error) {
         console.error('Error loading organizations:', error)
-        setError('Fehler beim Laden der Organisationen')
         setIsLoading(false)
         return
       }
@@ -126,7 +140,6 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error loading organizations:', error)
-      setError('Fehler beim Laden der Organisationen')
       setIsLoading(false)
     }
   }
@@ -284,7 +297,7 @@ export default function DashboardPage() {
   }
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || dashboardLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -295,18 +308,67 @@ export default function DashboardPage() {
     )
   }
 
-  // Error state
-  if (error) {
+  // Dashboard API Error state
+  if (dashboardError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <div className="rounded-md border border-red-200 bg-red-50 p-6 max-w-md">
+            <h3 className="text-lg font-medium text-red-800 mb-2">Dashboard-Fehler</h3>
+            <p className="text-sm text-red-700 mb-4">
+              Konnte Dashboard nicht laden. {String(dashboardError.message)}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+            >
+              Erneut versuchen
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Dashboard API unauthorized
+  if (dashboardData && !dashboardData.ok) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-sm text-gray-500 mb-4">Nicht angemeldet oder keine Berechtigung.</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.push('/auth/signin')}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            Erneut versuchen
+            Anmelden
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Dashboard API empty state
+  if (dashboardData && dashboardData.empty) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="max-w-md mx-auto">
+            <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Noch keine Organisation/Team</h2>
+            <p className="text-gray-600 mb-6">
+              Erstelle eine Organisation und lade Team-Mitglieder ein, um mit der Aufgabenverwaltung zu beginnen.
+            </p>
+            <button
+              onClick={() => router.push('/organizations/create')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            >
+              Organisation anlegen
+            </button>
+          </div>
         </div>
       </div>
     )

@@ -1,15 +1,21 @@
-'use client'
-
 interface LoadingSpinnerProps {
-  message?: string
+  size?: 'sm' | 'md' | 'lg'
+  text?: string
+  className?: string
 }
 
-export default function LoadingSpinner({ message = "Wird geladen..." }: LoadingSpinnerProps) {
+export function LoadingSpinner({ size = 'md', text, className = '' }: LoadingSpinnerProps) {
+  const sizeClasses = {
+    sm: 'h-4 w-4',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12'
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">{message}</p>
+    <div className={`flex items-center justify-center ${className}`}>
+      <div className="flex items-center gap-2 text-slate-500">
+        <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}></div>
+        {text && <span>{text}</span>}
       </div>
     </div>
   )

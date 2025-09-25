@@ -51,6 +51,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.45.0",
     "react-hot-toast": "^2.4.0",
+    "swr": "^2.3.6",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0",
     "workbox-webpack-plugin": "^7.0.0",
