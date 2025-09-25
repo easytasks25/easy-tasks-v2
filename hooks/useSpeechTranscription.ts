@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 interface TranscriptionState {
   isTranscribing: boolean
@@ -12,8 +12,18 @@ export function useSpeechTranscription() {
     isTranscribing: false,
     transcribedText: '',
     error: null,
-    isSupported: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window
+    isSupported: false // Wird später gesetzt
   })
+
+  // Prüfe Browser-Unterstützung nach dem Mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setState(prev => ({
+        ...prev,
+        isSupported: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window
+      }))
+    }
+  }, [])
 
   const transcribeAudio = useCallback(async (audioBlob: Blob) => {
     if (!state.isSupported) {
