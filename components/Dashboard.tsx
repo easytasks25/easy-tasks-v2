@@ -21,7 +21,6 @@ interface TeamMember {
   avatar?: string
   tasks: {
     total: number
-    completed: number
     pending: number
     overdue: number
   }
@@ -65,8 +64,7 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         name: 'Max Mustermann',
         role: 'Geschäftsführer',
         tasks: {
-          total: 12,
-          completed: 8,
+          total: 4,
           pending: 3,
           overdue: 1
         }
@@ -76,8 +74,7 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         name: 'Anna Schmidt',
         role: 'Projektleiterin',
         tasks: {
-          total: 15,
-          completed: 10,
+          total: 5,
           pending: 4,
           overdue: 1
         }
@@ -87,8 +84,7 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         name: 'Thomas Weber',
         role: 'Bauleiter',
         tasks: {
-          total: 18,
-          completed: 12,
+          total: 6,
           pending: 5,
           overdue: 1
         }
@@ -98,8 +94,7 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         name: 'Maria Müller',
         role: 'Sachbearbeiterin',
         tasks: {
-          total: 8,
-          completed: 6,
+          total: 2,
           pending: 2,
           overdue: 0
         }
@@ -109,8 +104,7 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         name: 'Peter Klein',
         role: 'Bauleiter',
         tasks: {
-          total: 14,
-          completed: 9,
+          total: 5,
           pending: 4,
           overdue: 1
         }
@@ -122,34 +116,35 @@ export function Dashboard({ tasks, user }: DashboardProps) {
   // Berechne Gesamtstatistiken
   const totalStats = teamMembers.reduce((acc, member) => ({
     total: acc.total + member.tasks.total,
-    completed: acc.completed + member.tasks.completed,
     pending: acc.pending + member.tasks.pending,
     overdue: acc.overdue + member.tasks.overdue
-  }), { total: 0, completed: 0, pending: 0, overdue: 0 })
+  }), { total: 0, pending: 0, overdue: 0 })
 
-  // Berechne Fertigstellungsrate
-  const completionRate = totalStats.total > 0 ? Math.round((totalStats.completed / totalStats.total) * 100) : 0
-
-  // Filtere Aufgaben basierend auf ausgewähltem Zeitraum
+  // Filtere Aufgaben basierend auf ausgewähltem Zeitraum (nur aktive Aufgaben)
   const getFilteredTasks = () => {
+    // Filtere zuerst abgeschlossene Aufgaben heraus
+    const activeTasks = tasks.filter(task => 
+      task.status !== 'completed' && task.status !== 'cancelled'
+    )
+    
     const now = new Date()
     switch (selectedPeriod) {
       case 'week':
         const weekStart = startOfWeek(now, { weekStartsOn: 1, locale: de })
         const weekEnd = endOfWeek(now, { weekStartsOn: 1, locale: de })
-        return tasks.filter(task => {
+        return activeTasks.filter(task => {
           const taskDate = new Date(task.dueDate)
           return isWithinInterval(taskDate, { start: weekStart, end: weekEnd })
         })
       case 'month':
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-        return tasks.filter(task => {
+        return activeTasks.filter(task => {
           const taskDate = new Date(task.dueDate)
           return isWithinInterval(taskDate, { start: monthStart, end: monthEnd })
         })
       default:
-        return tasks
+        return activeTasks
     }
   }
 
@@ -196,17 +191,6 @@ export function Dashboard({ tasks, user }: DashboardProps) {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Erledigte Aufgaben</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.completed}</p>
-            </div>
-          </div>
-        </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
@@ -233,24 +217,6 @@ export function Dashboard({ tasks, user }: DashboardProps) {
         </div>
       </div>
 
-      {/* Fortschrittsbalken */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Team-Fortschritt</h3>
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Fertigstellungsrate</span>
-              <span>{completionRate}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${completionRate}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Team-Übersicht */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -273,24 +239,15 @@ export function Dashboard({ tasks, user }: DashboardProps) {
                   Gesamt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Erledigt
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Offen
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Überfällig
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fortschritt
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {teamMembers.map((member) => {
-                const memberCompletionRate = member.tasks.total > 0 
-                  ? Math.round((member.tasks.completed / member.tasks.total) * 100) 
-                  : 0
                 
                 return (
                   <tr key={member.id} className="hover:bg-gray-50">
@@ -314,25 +271,11 @@ export function Dashboard({ tasks, user }: DashboardProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {member.tasks.total}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                      {member.tasks.completed}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-600">
                       {member.tasks.pending}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
                       {member.tasks.overdue}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${memberCompletionRate}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-gray-600">{memberCompletionRate}%</span>
-                      </div>
                     </td>
                   </tr>
                 )
@@ -358,7 +301,6 @@ export function Dashboard({ tasks, user }: DashboardProps) {
                 <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <div className={`h-3 w-3 rounded-full mr-3 ${
-                      task.status === 'completed' ? 'bg-green-500' :
                       task.status === 'in-progress' ? 'bg-blue-500' :
                       'bg-yellow-500'
                     }`}></div>
