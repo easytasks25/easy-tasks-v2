@@ -10,6 +10,7 @@ import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
 import { Dashboard } from '@/components/Dashboard'
 import { ArchiveView } from '@/components/ArchiveView'
+import { FilteredTasksView } from '@/components/FilteredTasksView'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
@@ -143,6 +144,11 @@ function DemoHome() {
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [filterState, setFilterState] = useState<{
+    type: 'status' | 'member' | 'none'
+    value: string
+    label: string
+  }>({ type: 'none', value: '', label: '' })
 
   const { moveOverdueToToday, moveIncompleteTodayTasks, getActiveBuckets } = useBuckets()
   
@@ -285,6 +291,11 @@ function DemoHome() {
     window.location.href = '/'
   }
 
+  const handleFilteredTasksView = (filterType: 'status' | 'member', filterValue: string, filterLabel: string) => {
+    setFilterState({ type: filterType, value: filterValue, label: filterLabel })
+    setView('filtered-tasks')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Demo-Banner */}
@@ -331,9 +342,17 @@ function DemoHome() {
         )}
 
         {view === 'dashboard' && (
-          <Dashboard
+          <Dashboard 
             tasks={tasks}
             user={demoUser}
+            onViewChange={(view) => {
+              if (view.startsWith('filtered-tasks:')) {
+                const [, filterType, filterValue, filterLabel] = view.split(':')
+                handleFilteredTasksView(filterType as 'status' | 'member', filterValue, filterLabel)
+              } else {
+                setView(view as View)
+              }
+            }}
           />
         )}
 
@@ -342,6 +361,16 @@ function DemoHome() {
             tasks={tasks}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
+          />
+        )}
+
+        {view === 'filtered-tasks' && (
+          <FilteredTasksView
+            tasks={tasks}
+            filterType={filterState.type}
+            filterValue={filterState.value}
+            filterLabel={filterState.label}
+            onViewChange={(view) => setView(view as View)}
           />
         )}
 
