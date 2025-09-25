@@ -56,18 +56,20 @@ export function FilteredTasksView({
       })
     }
 
-    // Zusätzliche Filter
-    const matchesSearch = searchQuery === '' || 
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.notes?.toLowerCase().includes(searchQuery.toLowerCase())
+    // Zusätzliche Filter anwenden
+    return filteredTasks.filter(task => {
+      const matchesSearch = searchQuery === '' || 
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.assignedTo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.notes?.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesStatus = statusFilter === 'all' || task.status === statusFilter
+      const matchesStatus = statusFilter === 'all' || task.status === statusFilter
 
-    return filteredTasks.filter(task => matchesSearch && matchesStatus)
+      return matchesSearch && matchesStatus
+    })
   }
 
   const filteredTasks = getFilteredTasks()
@@ -75,7 +77,7 @@ export function FilteredTasksView({
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-      case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
       case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
       case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -85,7 +87,7 @@ export function FilteredTasksView({
   const getStatusText = (status: TaskStatus) => {
     switch (status) {
       case 'pending': return 'Offen'
-      case 'in_progress': return 'In Bearbeitung'
+      case 'in-progress': return 'In Bearbeitung'
       case 'completed': return 'Erledigt'
       case 'cancelled': return 'Abgebrochen'
       default: return 'Unbekannt'
@@ -176,7 +178,7 @@ export function FilteredTasksView({
             >
               <option value="all">Alle Status</option>
               <option value="pending">Offen</option>
-              <option value="in_progress">In Bearbeitung</option>
+              <option value="in-progress">In Bearbeitung</option>
               <option value="completed">Erledigt</option>
               <option value="cancelled">Abgebrochen</option>
             </select>

@@ -10,6 +10,7 @@ import {
   ChartBarIcon,
   CalendarDaysIcon
 } from '@heroicons/react/24/outline'
+import { Filter } from 'lucide-react'
 import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { canViewDashboard, UserRole } from '@/types/permissions'
@@ -258,7 +259,7 @@ export function Dashboard({ tasks, user, onViewChange }: DashboardProps) {
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <FunnelIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Filter className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100">Interaktive Filterung</h3>
