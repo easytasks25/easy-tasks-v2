@@ -39,7 +39,7 @@ export default function CreateOrganizationPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/organizations/supabase', {
+      const response = await fetch('/api/organizations/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,15 +47,26 @@ export default function CreateOrganizationPage() {
         body: JSON.stringify(data),
       })
 
-      if (response.ok) {
-        const organization = await response.json()
-        router.push('/dashboard')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Fehler beim Erstellen der Organisation')
+      const json = await response.json()
+      
+      if (!response.ok || !json.ok) {
+        const msg = 
+          json?.error === 'unique_violation' ? 'Name bereits vergeben.'
+        : json?.error === 'missing_organization_name' ? 'Bitte Organisations-Namen eingeben.'
+        : json?.error === 'invalid_org_type' ? 'Ungültiger Organisationstyp.'
+        : json?.error === 'unauthorized' ? 'Bitte zuerst anmelden.'
+        : json?.error === 'db_unreachable' ? 'Datenbank nicht erreichbar.'
+        : json?.error === 'server_error' ? `Serverfehler: ${json.detail || 'Unbekannter Fehler'}`
+        : 'Serverfehler beim Anlegen der Organisation.'
+        setError(msg)
+        return
       }
+      
+      // Erfolg → weiterleiten
+      router.push('/dashboard')
     } catch (error) {
-      setError('Ein Fehler ist aufgetreten')
+      console.error('Organization creation error:', error)
+      setError('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.')
     } finally {
       setIsLoading(false)
     }

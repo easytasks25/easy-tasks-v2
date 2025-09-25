@@ -1,0 +1,125 @@
+// Supabase-kompatibles Prisma Schema
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Supabase Auth User (wird automatisch von Supabase verwaltet)
+// Wir referenzieren nur die ID aus auth.users
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   @default("COMPANY") // "COMPANY" | "PERSONAL"
+  domain      String?  // Optional: "mueller-bau.de"
+  owner_id    String   // Supabase auth.users.id
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  members     OrganizationMember[]
+  tasks       Task[]
+  buckets     Bucket[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String @id @default(cuid())
+  user_id        String // Supabase auth.users.id
+  organization_id String
+  role           String @default("member") // "owner" | "admin" | "manager" | "member"
+  joined_at      DateTime @default(now())
+
+  // Relations
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, organization_id])
+  @@map("organization_members")
+}
+
+model Task {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  priority       String   @default("medium") // "low" | "medium" | "high"
+  status         String   @default("pending") // "pending" | "in-progress" | "completed" | "cancelled"
+  due_date       DateTime?
+  category       String?
+  location       String?
+  assigned_to    String?  // Supabase auth.users.id
+  notes          String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  bucket_id       String?
+  bucket          Bucket?      @relation(fields: [bucket_id], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  started_at   DateTime?
+  completed_at DateTime?
+  completed_by String?
+
+  // Relations
+  created_by String // Supabase auth.users.id
+
+  @@map("tasks")
+}
+
+model Bucket {
+  id             String   @id @default(cuid())
+  name           String
+  type           String   @default("custom") // "today" | "tomorrow" | "this_week" | "custom"
+  color          String   @default("#3b82f6")
+  order          Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  user_id        String // Supabase auth.users.id
+  organization_id String
+  organization   Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  tasks          Task[]
+
+  @@unique([user_id, organization_id, name])
+  @@map("buckets")
+}
+
+model TaskHistory {
+  id         String   @id @default(cuid())
+  task_id    String
+  action     String   // "created" | "updated" | "status_changed" | etc.
+  old_value  String?
+  new_value  String?
+  created_by String   // Supabase auth.users.id
+  created_at DateTime @default(now())
+
+  @@map("task_history")
+}
+
+model Invitation {
+  id             String   @id @default(cuid())
+  email          String
+  organization_id String
+  role           String   @default("member")
+  token          String   @unique
+  expires_at     DateTime
+  accepted_at    DateTime?
+  invited_by     String   // Supabase auth.users.id
+  created_at     DateTime @default(now())
+
+  // Relations
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@map("invitations")
+}
