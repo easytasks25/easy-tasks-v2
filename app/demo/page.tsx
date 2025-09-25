@@ -15,6 +15,7 @@ import { useBuckets } from '@/hooks/useBuckets'
 import { useTaskHistory } from '@/hooks/useTaskHistory'
 import { toast } from 'react-hot-toast'
 import nextDynamic from 'next/dynamic'
+import type { View } from '@/lib/view'
 
 // Dynamische Imports für Components, die window verwenden könnten
 const OutlookIntegration = nextDynamic(() => import('@/components/OutlookIntegration').then(mod => ({ default: mod.OutlookIntegration })), { ssr: false })
@@ -137,7 +138,7 @@ const demoUser = {
 function DemoHome() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('lwtasks-demo-tasks', demoTasks)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [view, setView] = useState<'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'>('buckets')
+  const [view, setView] = useState<View>('buckets')
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -311,7 +312,7 @@ function DemoHome() {
 
       <Header 
         view={view}
-        onViewChange={setView}
+        onViewChange={(v: View) => setView(v)}
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         onLogout={handleLogout}
