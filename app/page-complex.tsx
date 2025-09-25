@@ -16,11 +16,13 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
 import { toast } from 'react-hot-toast'
 
+type View = 'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'
+
 export default function Home() {
   const { data: session, status } = useSession()
   const [tasks, setTasks] = useLocalStorage<Task[]>('lwtasks-tasks', [])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [view, setView] = useState<'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'>('buckets')
+  const [view, setView] = useState<View>('buckets')
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -172,7 +174,7 @@ export default function Home() {
 
       <Header 
         view={view}
-        onViewChange={setView}
+        onViewChange={(v: View) => setView(v)}
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         onLogout={handleLogout}
