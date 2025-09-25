@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [view, setView] = useState<View>('buckets')
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filterState, setFilterState] = useState<{
     type: 'status' | 'member' | 'none'
     value: string
@@ -77,7 +78,8 @@ export default function DashboardPage() {
       await loadOrganizations(authUser.id)
     } catch (error) {
       console.error('Error checking user:', error)
-      router.push('/auth/signin')
+      setError('Fehler beim Laden der Benutzerdaten')
+      setIsLoading(false)
     }
   }
 
@@ -91,7 +93,8 @@ export default function DashboardPage() {
             id,
             name,
             description,
-            owner_id,
+            type,
+            domain,
             created_at,
             updated_at
           )
@@ -100,6 +103,8 @@ export default function DashboardPage() {
 
       if (error) {
         console.error('Error loading organizations:', error)
+        setError('Fehler beim Laden der Organisationen')
+        setIsLoading(false)
         return
       }
 
@@ -115,10 +120,14 @@ export default function DashboardPage() {
         setSelectedOrg(orgs[0])
       } else {
         // Keine Organisationen - zur Erstellung weiterleiten
+        setIsLoading(false)
         router.push('/organizations/create')
+        return
       }
     } catch (error) {
       console.error('Error loading organizations:', error)
+      setError('Fehler beim Laden der Organisationen')
+      setIsLoading(false)
     }
   }
 
@@ -205,8 +214,6 @@ export default function DashboardPage() {
         return
       }
 
-      // Task-Historie wird später implementiert
-
       // Tasks neu laden
       await loadTasks()
       toast.success('Aufgabe erfolgreich erstellt')
@@ -276,6 +283,7 @@ export default function DashboardPage() {
     setView('filtered-tasks')
   }
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -287,14 +295,52 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user || !selectedOrg) {
+  // Error state
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Keine Organisation gefunden.</p>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Erneut versuchen
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // No user state
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Benutzer nicht gefunden.</p>
+          <button
+            onClick={() => router.push('/auth/signin')}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Anmelden
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // No organization state
+  if (!selectedOrg) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Keine Organisation gefunden</h2>
+          <p className="text-gray-600 mb-6">
+            Sie sind noch keiner Organisation zugeordnet. Erstellen Sie eine neue Organisation oder treten Sie einer bestehenden bei.
+          </p>
           <button
             onClick={() => router.push('/organizations/create')}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
           >
             Organisation erstellen
           </button>

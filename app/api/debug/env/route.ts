@@ -26,11 +26,35 @@ export async function GET(request: NextRequest) {
 
   // Test Supabase Connection
   let supabaseTest = '❌ Not tested'
+  let userTest = '❌ Not tested'
+  let orgTest = '❌ Not tested'
+  
   try {
     const { createClient } = await import('@/lib/supabase/server')
     const supabase = createClient()
+    
+    // Test basic connection
     const { data, error } = await supabase.from('organizations').select('count').limit(1)
     supabaseTest = error ? `❌ Error: ${error.message}` : '✅ Connected'
+    
+    // Test user authentication
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    userTest = userError ? `❌ Error: ${userError.message}` : user ? `✅ User: ${user.email}` : '❌ No user'
+    
+    // Test organization access
+    if (user) {
+      const { data: memberships, error: orgError } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .limit(1)
+      
+      orgTest = orgError ? `❌ Error: ${orgError.message}` : 
+                memberships && memberships.length > 0 ? `✅ ${memberships.length} organization(s)` : 
+                '⚠️ No organizations'
+    } else {
+      orgTest = '⚠️ No user to test'
+    }
   } catch (error) {
     supabaseTest = `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`
   }
@@ -38,6 +62,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     environment: envCheck,
     supabaseConnection: supabaseTest,
+    userTest,
+    organizationTest: orgTest,
     timestamp: new Date().toISOString(),
   })
 }

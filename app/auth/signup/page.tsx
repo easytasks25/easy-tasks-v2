@@ -66,19 +66,40 @@ export default function SignUpPage() {
       }
 
       // 2. Organisation erstellen
-      const { data: organization, error: orgError } = await supabase
+      const orgResult = await (supabase
         .from('organizations')
         .insert({
           name: data.organizationName,
           description: data.organizationType === 'COMPANY' ? 'Geschäftliche Organisation' : 'Privates Team',
+          type: data.organizationType,
           owner_id: authData.user.id,
         } as any)
         .select()
-        .single()
+        .single() as any)
 
-      if (orgError) {
-        console.error('Organization creation error:', orgError)
-        // Organisation wird automatisch durch Trigger erstellt, also ignorieren wir den Fehler
+      if (orgResult.error) {
+        console.error('Organization creation error:', orgResult.error)
+        throw new Error(`Fehler beim Erstellen der Organisation: ${orgResult.error.message}`)
+      }
+
+      if (!orgResult.data) {
+        throw new Error('Organisation konnte nicht erstellt werden')
+      }
+
+      const organization = orgResult.data
+
+      // 3. Benutzer als Owner zur Organisation hinzufügen
+      const { error: memberError } = await (supabase
+        .from('organization_members')
+        .insert({
+          user_id: authData.user.id,
+          organization_id: organization.id,
+          role: 'owner',
+        } as any) as any)
+
+      if (memberError) {
+        console.error('Error adding user to organization:', memberError)
+        throw new Error(`Fehler beim Hinzufügen zur Organisation: ${memberError.message}`)
       }
 
       setSuccess(true)
