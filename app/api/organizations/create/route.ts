@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 type Body = { 
   name: string
@@ -27,74 +28,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'invalid_org_type' }, { status: 400 })
     }
 
-    // Verwende die bestehende Supabase-API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/organizations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      },
-      body: JSON.stringify({
-        name: name.trim(),
-        type: type,
-        domain: domain || null,
-        owner_id: user.id
+    // Prisma verwenden für Organisation-Erstellung
+    const result = await prisma.$transaction(async (tx) => {
+      // Organisation erstellen
+      const organization = await tx.organization.create({
+        data: {
+          name: name.trim(),
+          type: type,
+          domain: domain || null,
+          createdById: user.id
+        }
       })
-    })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('ORG_CREATE_ERROR', errorData)
-      
-      if (response.status === 409) {
-        return NextResponse.json({ 
-          ok: false, 
-          error: 'unique_violation', 
-          detail: 'Organization name already exists' 
-        }, { status: 409 })
-      }
-      
-      return NextResponse.json({ 
-        ok: false, 
-        error: 'server_error',
-        detail: errorData.message || 'Failed to create organization'
-      }, { status: response.status })
-    }
-
-    const organization = await response.json()
-
-    // Benutzer als Owner hinzufügen
-    const memberResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/organization_members`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      },
-      body: JSON.stringify({
-        user_id: user.id,
-        organization_id: organization.id,
-        role: 'owner'
+      // Benutzer als Owner hinzufügen
+      await tx.userOrganization.create({
+        data: {
+          userId: user.id,
+          organizationId: organization.id,
+          role: 'OWNER'
+        }
       })
-    })
 
-    if (!memberResponse.ok) {
-      console.error('MEMBER_CREATE_ERROR', await memberResponse.json())
-      return NextResponse.json({ 
-        ok: false, 
-        error: 'server_error',
-        detail: 'Failed to add user as member' 
-      }, { status: 500 })
-    }
+      // Standard-Buckets erstellen
+      const buckets = [
+        { name: 'Heute', type: 'TODAY' as const, color: '#ef4444', order: 1 },
+        { name: 'Morgen', type: 'TOMORROW' as const, color: '#f97316', order: 2 },
+        { name: 'Diese Woche', type: 'THIS_WEEK' as const, color: '#eab308', order: 3 },
+        { name: 'Später', type: 'CUSTOM' as const, color: '#6b7280', order: 4 }
+      ]
+
+      await tx.bucket.createMany({
+        data: buckets.map(bucket => ({
+          ...bucket,
+          userId: user.id,
+          organizationId: organization.id
+        }))
+      })
+
+      return { organizationId: organization.id }
+    })
 
     return NextResponse.json({ 
       ok: true, 
-      organizationId: organization.id,
+      organizationId: result.organizationId,
       message: 'Organization created successfully'
     })
   } catch (e: any) {
     console.error('ORG_CREATE_ERROR', e)
+    
+    // Prisma-spezifische Fehlerbehandlung
+    if (e?.code === 'P2002') {
+      // Unique-Constraint verletzt
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'unique_violation', 
+        detail: 'Organization name already exists' 
+      }, { status: 409 })
+    }
+    
+    if (e?.code === 'P1001') {
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'db_unreachable' 
+      }, { status: 503 })
+    }
+    
     return NextResponse.json({ 
       ok: false, 
       error: 'server_error',
