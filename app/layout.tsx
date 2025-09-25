@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientProviders from '@/components/ClientProviders'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -45,9 +46,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="easy-tasks" />
       </head>
       <body className={inter.className}>
-        <ClientProviders>
-          {children}
-        </ClientProviders>
+        <ThemeProvider>
+          <ClientProviders>
+            {children}
+          </ClientProviders>
+        </ThemeProvider>
       </body>
     </html>
   )
