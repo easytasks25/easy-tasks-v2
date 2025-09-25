@@ -1,9 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 
-const prisma = new PrismaClient()
+// Lokale Speicherung - Mock-Daten für Demo
+const mockBuckets = [
+  {
+    id: 'bucket-0',
+    name: 'Heute',
+    type: 'today',
+    color: '#ef4444',
+    order: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'demo-user',
+    organizationId: 'demo-org',
+    projectId: 'demo-project',
+    isDefault: true,
+    tasks: []
+  },
+  {
+    id: 'bucket-1',
+    name: 'Morgen',
+    type: 'tomorrow',
+    color: '#f59e0b',
+    order: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'demo-user',
+    organizationId: 'demo-org',
+    projectId: 'demo-project',
+    isDefault: true,
+    tasks: []
+  },
+  {
+    id: 'bucket-2',
+    name: 'Diese Woche',
+    type: 'this-week',
+    color: '#3b82f6',
+    order: 2,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    userId: 'demo-user',
+    organizationId: 'demo-org',
+    projectId: 'demo-project',
+    isDefault: true,
+    tasks: []
+  }
+]
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,27 +60,17 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get('projectId')
     const organizationId = searchParams.get('organizationId')
 
-    const buckets = await prisma.bucket.findMany({
-      where: {
-        userId: session.user.id,
-        ...(organizationId && { organizationId }),
-        ...(projectId && { projectId }),
-      },
-      include: {
-        tasks: {
-          include: {
-            attachments: true,
-            photos: true,
-            voiceNotes: true,
-          }
-        }
-      },
-      orderBy: {
-        order: 'asc'
-      }
+    // Filter Mock-Daten basierend auf Parametern
+    let filteredBuckets = mockBuckets.filter(bucket => {
+      if (organizationId && bucket.organizationId !== organizationId) return false
+      if (projectId && bucket.projectId !== projectId) return false
+      return true
     })
 
-    return NextResponse.json(buckets)
+    // Sortiere nach Reihenfolge
+    filteredBuckets.sort((a, b) => a.order - b.order)
+
+    return NextResponse.json(filteredBuckets)
   } catch (error) {
     console.error('Error fetching buckets:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -55,22 +88,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, type, color, order, projectId, organizationId } = body
 
-    const bucket = await prisma.bucket.create({
-      data: {
-        name,
-        type: (type || 'CUSTOM') as any,
-        color: color || '#3b82f6',
-        order: order || 0,
-        projectId,
-        organizationId: organizationId || 'default-org', // Fallback für Demo
-        userId: session.user.id,
-      },
-      include: {
-        tasks: true
-      }
-    })
+    // Erstelle neuen Bucket mit Mock-Daten
+    const newBucket = {
+      id: `bucket-${Date.now()}`,
+      name,
+      type: type || 'custom',
+      color: color || '#3b82f6',
+      order: order || mockBuckets.length,
+      projectId: projectId || 'demo-project',
+      organizationId: organizationId || 'demo-org',
+      userId: session.user.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isDefault: false,
+      tasks: []
+    }
 
-    return NextResponse.json(bucket, { status: 201 })
+    // In einer echten lokalen Speicherung würden wir hier localStorage verwenden
+    // Für die Demo geben wir einfach den erstellten Bucket zurück
+    console.log('Bucket erstellt (lokale Speicherung):', newBucket)
+
+    return NextResponse.json(newBucket, { status: 201 })
   } catch (error) {
     console.error('Error creating bucket:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

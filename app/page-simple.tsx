@@ -1,130 +1,100 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import SimpleHeader from '@/components/SimpleHeader'
-import OrganizationSelector from '@/components/OrganizationSelector'
-import TaskSection from '@/components/TaskSection'
-import FeaturesOverview from '@/components/FeaturesOverview'
-import TaskFormModal from '@/components/TaskFormModal'
-import OrganizationFormModal from '@/components/OrganizationFormModal'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import UnauthenticatedView from '@/components/UnauthenticatedView'
+import { useState } from 'react'
+import Link from 'next/link'
 
-// Einfache Task-Typen
-interface SimpleTask {
-  id: string
-  title: string
-  description?: string
-  status: 'pending' | 'completed'
-  createdAt: Date
-}
+export default function SimpleHome() {
+  const [isLoading, setIsLoading] = useState(false)
 
-// Einfache Organisation-Typen
-interface SimpleOrg {
-  id: string
-  name: string
-  type: 'company' | 'personal'
-}
-
-export default function SimpleHomePage() {
-  const { data: session, status } = useSession()
-  const [tasks, setTasks] = useState<SimpleTask[]>([])
-  const [organizations, setOrganizations] = useState<SimpleOrg[]>([])
-  const [currentOrg, setCurrentOrg] = useState<SimpleOrg | null>(null)
-  const [showTaskForm, setShowTaskForm] = useState(false)
-  const [showOrgForm, setShowOrgForm] = useState(false)
-
-  // Loading state
-  if (status === 'loading') {
-    return <LoadingSpinner />
+  const handleDemoClick = () => {
+    setIsLoading(true)
+    // Kurze Verzögerung für bessere UX
+    setTimeout(() => {
+      window.location.href = '/demo'
+    }, 500)
   }
 
-  // Not authenticated
-  if (status === 'unauthenticated') {
-    return <UnauthenticatedView />
-  }
-
-  // Event handlers
-  const handleSelectOrg = useCallback((org: SimpleOrg) => {
-    setCurrentOrg(org)
-  }, [])
-
-  const handleCreateOrg = useCallback(() => {
-    setShowOrgForm(true)
-  }, [])
-
-  const handleOrgSubmit = useCallback((name: string, type: 'company' | 'personal') => {
-    const newOrg: SimpleOrg = {
-      id: Date.now().toString(),
-      name,
-      type,
-    }
-    setOrganizations(prev => [newOrg, ...prev])
-    setCurrentOrg(newOrg)
-  }, [])
-
-  const handleCreateTask = useCallback(() => {
-    setShowTaskForm(true)
-  }, [])
-
-  const handleTaskSubmit = useCallback((data: { title: string; description?: string }) => {
-    const newTask: SimpleTask = {
-      id: Date.now().toString(),
-      title: data.title,
-      description: data.description,
-      status: 'pending',
-      createdAt: new Date(),
-    }
-    setTasks(prev => [newTask, ...prev])
-  }, [])
-
-  const handleToggleTask = useCallback((taskId: string) => {
-    setTasks(prev =>
-      prev.map(t =>
-        t.id === taskId
-          ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' }
-          : t
-      )
-    )
-  }, [])
-
-  // Authenticated user
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SimpleHeader userName={session?.user?.name || session?.user?.email || undefined} />
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="space-y-8">
-          <OrganizationSelector
-            organizations={organizations}
-            currentOrg={currentOrg}
-            onSelectOrg={handleSelectOrg}
-            onCreateOrg={handleCreateOrg}
-          />
-
-          <TaskSection
-            tasks={tasks}
-            currentOrg={currentOrg}
-            onToggleTask={handleToggleTask}
-            onCreateTask={handleCreateTask}
-          />
-
-          <FeaturesOverview />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-blue-600">
+            <svg
+              className="h-10 w-10 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            easy-tasks
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Digitale Aufgabenverwaltung für Bauleiter
+          </p>
         </div>
-      </main>
 
-      <TaskFormModal
-        isOpen={showTaskForm}
-        onClose={() => setShowTaskForm(false)}
-        onSubmit={handleTaskSubmit}
-      />
+        <div className="mt-8 space-y-4">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Demo-Version
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Testen Sie die App ohne Anmeldung. Alle Daten werden lokal im Browser gespeichert.
+            </p>
+            <button
+              onClick={handleDemoClick}
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Wird geladen...
+                </div>
+              ) : (
+                'Demo starten'
+              )}
+            </button>
+          </div>
 
-      <OrganizationFormModal
-        isOpen={showOrgForm}
-        onClose={() => setShowOrgForm(false)}
-        onSubmit={handleOrgSubmit}
-      />
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Vollversion
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Melden Sie sich an, um alle Funktionen zu nutzen und Daten zu synchronisieren.
+            </p>
+            <div className="space-y-2">
+              <Link
+                href="/auth/signin"
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Anmelden
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Registrieren
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            Version 1.0.0 - Lokale Speicherung aktiviert
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
