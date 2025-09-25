@@ -21,16 +21,21 @@ export function useBuckets() {
     }
   }, [buckets.length, setBuckets])
 
-  // Get tasks for a specific bucket
+  // Get tasks for a specific bucket (only active tasks)
   const getTasksForBucket = (bucketId: string, allTasks: Task[]): Task[] => {
     const bucket = buckets.find(b => b.id === bucketId)
     if (!bucket) return []
+
+    // Filter out completed and cancelled tasks
+    const activeTasks = allTasks.filter(task => 
+      task.status !== 'completed' && task.status !== 'cancelled'
+    )
 
     const taskBucketIds = taskBuckets
       .filter(tb => tb.bucketId === bucketId)
       .map(tb => tb.taskId)
 
-    let bucketTasks = allTasks.filter(task => taskBucketIds.includes(task.id))
+    let bucketTasks = activeTasks.filter(task => taskBucketIds.includes(task.id))
 
     // For default buckets, also include tasks based on due date
     if (bucket.isDefault) {
@@ -43,19 +48,19 @@ export function useBuckets() {
       
       switch (bucket.type) {
         case 'today':
-          dateFilteredTasks = allTasks.filter(task => {
+          dateFilteredTasks = activeTasks.filter(task => {
             const taskDate = new Date(task.dueDate)
             return isToday(taskDate) || taskBucketIds.includes(task.id)
           })
           break
         case 'tomorrow':
-          dateFilteredTasks = allTasks.filter(task => {
+          dateFilteredTasks = activeTasks.filter(task => {
             const taskDate = new Date(task.dueDate)
             return isTomorrow(taskDate) || taskBucketIds.includes(task.id)
           })
           break
         case 'this-week':
-          dateFilteredTasks = allTasks.filter(task => {
+          dateFilteredTasks = activeTasks.filter(task => {
             const taskDate = new Date(task.dueDate)
             return isWithinInterval(taskDate, { start: weekStart, end: weekEnd }) || taskBucketIds.includes(task.id)
           })
@@ -67,6 +72,13 @@ export function useBuckets() {
     }
 
     return bucketTasks
+  }
+
+  // Get archived tasks (completed and cancelled)
+  const getArchivedTasks = (allTasks: Task[]): Task[] => {
+    return allTasks.filter(task => 
+      task.status === 'completed' || task.status === 'cancelled'
+    )
   }
 
   // Move task to bucket
@@ -232,6 +244,7 @@ export function useBuckets() {
     buckets,
     taskBuckets,
     getTasksForBucket,
+    getArchivedTasks,
     moveTaskToBucket,
     removeTaskFromBucket,
     createBucket,

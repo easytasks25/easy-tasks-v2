@@ -9,6 +9,7 @@ import { NotesSection } from '@/components/NotesSection'
 import { QuickActions } from '@/components/QuickActions'
 import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
+import { ArchiveView } from '@/components/ArchiveView'
 import { OutlookIntegration } from '@/components/OutlookIntegration'
 import { EmailIntegration } from '@/components/EmailIntegration'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
@@ -224,6 +225,14 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Notizen</h2>
             <p className="text-gray-600">Wird nach dem Deployment aktiviert</p>
           </div>
+        )}
+
+        {view === 'archive' && (
+          <ArchiveView
+            tasks={tasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+          />
         )}
 
         {view === 'integrations' && (

@@ -9,6 +9,7 @@ import { QuickActions } from '@/components/QuickActions'
 import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
 import { Dashboard } from '@/components/Dashboard'
+import { ArchiveView } from '@/components/ArchiveView'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
@@ -333,6 +334,14 @@ function DemoHome() {
           <Dashboard
             tasks={tasks}
             user={demoUser}
+          />
+        )}
+
+        {view === 'archive' && (
+          <ArchiveView
+            tasks={tasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
           />
         )}
 

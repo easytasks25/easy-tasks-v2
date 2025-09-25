@@ -8,6 +8,7 @@ import { NotesSection } from '@/components/NotesSection'
 import { QuickActions } from '@/components/QuickActions'
 import { Header } from '@/components/Header'
 import { BucketBoard } from '@/components/BucketBoard'
+import { ArchiveView } from '@/components/ArchiveView'
 import { Task, TaskPriority, TaskStatus } from '@/types/task'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useBuckets } from '@/hooks/useBuckets'
@@ -259,6 +260,14 @@ function DemoHome() {
 
         {view === 'notes' && (
           <NotesSection />
+        )}
+
+        {view === 'archive' && (
+          <ArchiveView
+            tasks={tasks}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+          />
         )}
 
         {view === 'integrations' && (

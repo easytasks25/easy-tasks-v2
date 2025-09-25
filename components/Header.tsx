@@ -14,7 +14,8 @@ import {
   XMarkIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ArchiveBoxIcon
 } from '@heroicons/react/24/outline'
 import { TaskStats, Task } from '@/types/task'
 import { format, addDays } from 'date-fns'
@@ -44,6 +45,7 @@ export function Header({ view, onViewChange, selectedDate, onDateChange, onLogou
     { name: 'Dashboard', view: 'dashboard' as const, icon: ChartBarIcon },
     { name: 'Kalender', view: 'calendar' as const, icon: CalendarDaysIcon },
     { name: 'Notizen', view: 'notes' as const, icon: DocumentTextIcon },
+    { name: 'Archiv', view: 'archive' as const, icon: ArchiveBoxIcon },
   ]
 
   const handleSearch = (query: string) => {
