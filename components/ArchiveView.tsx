@@ -96,10 +96,10 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <ArchiveBoxIcon className="h-8 w-8 text-gray-600" />
+          <ArchiveBoxIcon className="h-8 w-8 text-gray-600 dark:text-gray-400" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Archiv</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Archiv</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {archivedTasks.length} archivierte {archivedTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'}
             </p>
           </div>
@@ -107,29 +107,29 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Titel, Beschreibung, Kategorie, Standort, Notizen durchsuchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
           {/* Status Filter */}
           <div className="flex items-center space-x-2">
-            <FunnelIcon className="h-5 w-5 text-gray-400" />
+            <FunnelIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as TaskStatus | 'all')}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Alle Status</option>
               <option value="completed">Erledigt</option>
@@ -142,9 +142,9 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
       {/* Tasks */}
       {Object.keys(groupedTasks).length === 0 ? (
         <div className="text-center py-12">
-          <ArchiveBoxIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Keine archivierten Aufgaben</h3>
-          <p className="text-gray-600">
+          <ArchiveBoxIcon className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Keine archivierten Aufgaben</h3>
+          <p className="text-gray-600 dark:text-gray-400">
             {searchQuery || statusFilter !== 'all' 
               ? 'Keine Aufgaben entsprechen den aktuellen Filtern.'
               : 'Abgeschlossene und abgebrochene Aufgaben werden hier angezeigt.'
@@ -157,16 +157,16 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
             .sort(([a], [b]) => new Date(b.split('.').reverse().join('-')).getTime() - new Date(a.split('.').reverse().join('-')).getTime())
             .map(([date, tasks]) => (
             <div key={date} className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
                 {date}
               </h3>
               <div className="grid gap-4">
                 {tasks.map((task) => (
-                  <div key={task.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div key={task.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h4 className="text-lg font-medium text-gray-900 line-through">
+                          <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 line-through">
                             {task.title}
                           </h4>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -175,12 +175,12 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                         </div>
                         
                         {task.description && (
-                          <p className="text-gray-600 mb-3 line-through">
+                          <p className="text-gray-600 dark:text-gray-400 mb-3 line-through">
                             {task.description}
                           </p>
                         )}
 
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                           <span>Kategorie: {task.category || 'Keine'}</span>
                           <span>Priorität: {task.priority}</span>
                           {task.location && <span>Standort: {task.location}</span>}
@@ -193,7 +193,7 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                         </div>
                         
                         {task.notes && (
-                          <div className="mt-2 text-sm text-gray-600">
+                          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                             <strong>Notizen:</strong> {task.notes}
                           </div>
                         )}
@@ -202,7 +202,7 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                       <div className="flex items-center space-x-2 ml-4">
                         <button
                           onClick={() => handleRestoreTask(task.id)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           title="Aufgabe wiederherstellen"
                         >
                           <ArrowPathIcon className="h-4 w-4 mr-1" />
@@ -212,7 +212,7 @@ export function ArchiveView({ tasks, onUpdateTask, onDeleteTask }: ArchiveViewPr
                         
                         <button
                           onClick={() => onDeleteTask(task.id)}
-                          className="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          className="inline-flex items-center px-3 py-1.5 border border-red-300 dark:border-red-600 shadow-sm text-sm font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           title="Aufgabe endgültig löschen"
                         >
                           <TrashIcon className="h-4 w-4" />
