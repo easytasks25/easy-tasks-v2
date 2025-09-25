@@ -20,7 +20,7 @@ export default function Home() {
   const { data: session, status } = useSession()
   const [tasks, setTasks] = useLocalStorage<Task[]>('lwtasks-tasks', [])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [view, setView] = useState<'buckets' | 'calendar' | 'notes' | 'integrations'>('buckets')
+  const [view, setView] = useState<'buckets' | 'calendar' | 'notes' | 'integrations' | 'dashboard'>('buckets')
   const [isOffline, setIsOffline] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -203,6 +203,13 @@ export default function Home() {
           </div>
         )}
 
+
+        {view === 'dashboard' && (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dashboard</h2>
+            <p className="text-gray-600">Team-Übersicht und Statistiken</p>
+          </div>
+        )}
 
         {view === 'calendar' && (
           <div className="text-center py-12">
