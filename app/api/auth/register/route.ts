@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const organization = await prisma.organization.create({
       data: {
         name: organizationName,
-        type: organizationType,
+        type: organizationType === 'COMPANY' ? 'company' : 'team',
         createdById: user.id,
         settings: {
           timezone: 'Europe/Berlin',

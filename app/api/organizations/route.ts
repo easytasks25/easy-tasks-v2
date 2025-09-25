@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const organization = await prisma.organization.create({
       data: {
         name,
-        type: type || 'COMPANY',
+        type: type === 'COMPANY' ? 'company' : 'team',
         domain,
         createdById: session.user.id,
         settings: {

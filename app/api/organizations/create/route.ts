@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       const organization = await tx.organization.create({
         data: {
           name: name.trim(),
-          type: type,
+          type: type === 'COMPANY' ? 'company' : 'team',
           domain: domain || null,
           createdById: user.id
         }
