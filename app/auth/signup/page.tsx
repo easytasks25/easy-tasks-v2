@@ -89,7 +89,25 @@ export default function SignUpPage() {
       }, 2000)
     } catch (error) {
       console.error('Registration error:', error)
-      setError(error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten')
+      
+      // Detaillierte Fehlerbehandlung
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Ungültige Anmeldedaten')
+        } else if (error.message.includes('User already registered')) {
+          setError('Benutzer ist bereits registriert')
+        } else if (error.message.includes('Password should be at least')) {
+          setError('Passwort muss mindestens 6 Zeichen haben')
+        } else if (error.message.includes('Invalid email')) {
+          setError('Ungültige E-Mail-Adresse')
+        } else if (error.message.includes('Database connection')) {
+          setError('Datenbankverbindung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
+        } else {
+          setError(`Registrierung fehlgeschlagen: ${error.message}`)
+        }
+      } else {
+        setError('Ein unbekannter Fehler ist aufgetreten')
+      }
     } finally {
       setIsLoading(false)
     }
