@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
         organizations (
           id,
           name,
-          description,
           type,
           domain,
           created_at,
@@ -63,10 +62,9 @@ export async function POST(request: NextRequest) {
       .from('organizations')
       .insert({
         name,
-        description: `Organisation ${name}`,
         type: type || 'COMPANY',
         domain,
-        owner_id: user.id,
+        createdById: user.id,
       } as any)
       .select()
       .single()
