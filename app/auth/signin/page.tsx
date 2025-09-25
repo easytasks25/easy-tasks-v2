@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { createClient } from '@/lib/supabase/client'
 
 const signInSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -34,17 +34,17 @@ export default function SignInPage() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
+      const supabase = createClient()
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
-        redirect: false,
       })
 
-      if (result?.error) {
+      if (error) {
         setError('Ungültige Anmeldedaten')
       } else {
         // Erfolgreiche Anmeldung
-        router.push('/')
+        router.push('/demo')
         router.refresh()
       }
     } catch (error) {

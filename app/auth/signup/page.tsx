@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { createClient } from '@/lib/supabase/client'
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name muss mindestens 2 Zeichen haben'),
@@ -44,37 +44,52 @@ export default function SignUpPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const supabase = createClient()
+      
+      // 1. Benutzer bei Supabase registrieren
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+          },
         },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          organizationName: data.organizationName,
-          organizationType: data.organizationType,
-        }),
       })
 
-      if (response.ok) {
-        setSuccess(true)
-        // Automatisch anmelden nach Registrierung
-        setTimeout(async () => {
-          await signIn('credentials', {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          })
-          router.push('/')
-        }, 2000)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Registrierung fehlgeschlagen')
+      if (authError) {
+        throw new Error(authError.message)
       }
+
+      if (!authData.user) {
+        throw new Error('Registrierung fehlgeschlagen')
+      }
+
+      // 2. Organisation erstellen
+      const { data: organization, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: data.organizationName,
+          description: data.organizationType === 'COMPANY' ? 'Geschäftliche Organisation' : 'Privates Team',
+          owner_id: authData.user.id,
+        } as any)
+        .select()
+        .single()
+
+      if (orgError) {
+        console.error('Organization creation error:', orgError)
+        // Organisation wird automatisch durch Trigger erstellt, also ignorieren wir den Fehler
+      }
+
+      setSuccess(true)
+      
+      // 3. Weiterleitung zur App
+      setTimeout(() => {
+        router.push('/demo')
+      }, 2000)
     } catch (error) {
-      setError('Ein Fehler ist aufgetreten')
+      console.error('Registration error:', error)
+      setError(error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten')
     } finally {
       setIsLoading(false)
     }
