@@ -38,6 +38,10 @@ interface DashboardProps {
 export function Dashboard({ tasks, user }: DashboardProps) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week')
+  const [activeFilter, setActiveFilter] = useState<{
+    type: 'status' | 'member' | 'none'
+    value: string
+  }>({ type: 'none', value: '' })
 
   // Prüfe Berechtigungen (später aus echten Benutzerdaten)
   const userRole = (user?.role as UserRole) || 'manager' // Demo: Standard-Rolle
@@ -120,32 +124,60 @@ export function Dashboard({ tasks, user }: DashboardProps) {
     overdue: acc.overdue + member.tasks.overdue
   }), { total: 0, pending: 0, overdue: 0 })
 
-  // Filtere Aufgaben basierend auf ausgewähltem Zeitraum (nur aktive Aufgaben)
+  // Filtere Aufgaben basierend auf ausgewähltem Zeitraum und aktiven Filtern
   const getFilteredTasks = () => {
     // Filtere zuerst abgeschlossene Aufgaben heraus
     const activeTasks = tasks.filter(task => 
       task.status !== 'completed' && task.status !== 'cancelled'
     )
     
+    let filteredTasks = activeTasks
+    
+    // Zeitraum-Filter
     const now = new Date()
     switch (selectedPeriod) {
       case 'week':
         const weekStart = startOfWeek(now, { weekStartsOn: 1, locale: de })
         const weekEnd = endOfWeek(now, { weekStartsOn: 1, locale: de })
-        return activeTasks.filter(task => {
+        filteredTasks = filteredTasks.filter(task => {
           const taskDate = new Date(task.dueDate)
           return isWithinInterval(taskDate, { start: weekStart, end: weekEnd })
         })
+        break
       case 'month':
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-        return activeTasks.filter(task => {
+        filteredTasks = filteredTasks.filter(task => {
           const taskDate = new Date(task.dueDate)
           return isWithinInterval(taskDate, { start: monthStart, end: monthEnd })
         })
-      default:
-        return activeTasks
+        break
     }
+    
+    // Aktive Filter anwenden
+    if (activeFilter.type === 'status') {
+      if (activeFilter.value === 'pending') {
+        filteredTasks = filteredTasks.filter(task => task.status === 'pending')
+      } else if (activeFilter.value === 'overdue') {
+        filteredTasks = filteredTasks.filter(task => {
+          const taskDate = new Date(task.dueDate)
+          return taskDate < now && task.status !== 'completed'
+        })
+      }
+    } else if (activeFilter.type === 'member') {
+      const member = teamMembers.find(m => m.id === activeFilter.value)
+      if (member) {
+        // Hier würden wir normalerweise nach assignedTo filtern
+        // Da wir Mock-Daten haben, simulieren wir das basierend auf dem Namen
+        filteredTasks = filteredTasks.filter(task => {
+          // Simuliere Zuweisung basierend auf Task-Titel oder anderen Kriterien
+          // In einer echten App würde hier task.assignedTo === member.id stehen
+          return Math.random() > 0.5 // Zufällige Zuweisung für Demo
+        })
+      }
+    }
+    
+    return filteredTasks
   }
 
   const filteredTasks = getFilteredTasks()
@@ -159,40 +191,54 @@ export function Dashboard({ tasks, user }: DashboardProps) {
           <p className="text-gray-600 dark:text-gray-400">Überblick über Ihr Team und die Aufgabenverteilung</p>
         </div>
         
-        {/* Zeitraum-Filter */}
-        <div className="flex space-x-2">
-          {(['week', 'month', 'all'] as const).map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                selectedPeriod === period
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Alle'}
-            </button>
-          ))}
+        {/* Filter und Zeitraum */}
+        <div className="flex items-center space-x-4">
+          {/* Aktiver Filter */}
+          {activeFilter.type !== 'none' && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Filter:</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
+                {activeFilter.type === 'status' 
+                  ? (activeFilter.value === 'pending' ? 'Offene Aufgaben' : 'Überfällige Aufgaben')
+                  : activeFilter.type === 'member'
+                    ? teamMembers.find(m => m.id === activeFilter.value)?.name || 'Unbekannt'
+                    : ''
+                }
+                <button
+                  onClick={() => setActiveFilter({ type: 'none', value: '' })}
+                  className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                >
+                  ×
+                </button>
+              </span>
+            </div>
+          )}
+          
+          {/* Zeitraum-Filter */}
+          <div className="flex space-x-2">
+            {(['week', 'month', 'all'] as const).map((period) => (
+              <button
+                key={period}
+                onClick={() => setSelectedPeriod(period)}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  selectedPeriod === period
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {period === 'week' ? 'Diese Woche' : period === 'month' ? 'Dieser Monat' : 'Alle'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Gesamtstatistiken */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <UserGroupIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Team-Mitglieder</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{teamMembers.length}</p>
-            </div>
-          </div>
-        </div>
-
-
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div 
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow duration-200"
+          onClick={() => setActiveFilter({ type: 'status', value: 'pending' })}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
               <ClockIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
@@ -204,7 +250,10 @@ export function Dashboard({ tasks, user }: DashboardProps) {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div 
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow duration-200"
+          onClick={() => setActiveFilter({ type: 'status', value: 'overdue' })}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
               <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -250,7 +299,11 @@ export function Dashboard({ tasks, user }: DashboardProps) {
               {teamMembers.map((member) => {
                 
                 return (
-                  <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr 
+                    key={member.id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => setActiveFilter({ type: 'member', value: member.id })}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
@@ -288,9 +341,19 @@ export function Dashboard({ tasks, user }: DashboardProps) {
       {/* Aktuelle Aufgaben (gefiltert) */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Aktuelle Aufgaben</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            {activeFilter.type === 'status' 
+              ? (activeFilter.value === 'pending' ? 'Offene Aufgaben' : 'Überfällige Aufgaben')
+              : activeFilter.type === 'member'
+                ? `Aufgaben von ${teamMembers.find(m => m.id === activeFilter.value)?.name || 'Unbekannt'}`
+                : 'Aktuelle Aufgaben'
+            }
+          </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {selectedPeriod === 'week' ? 'Diese Woche' : selectedPeriod === 'month' ? 'Dieser Monat' : 'Alle Aufgaben'}
+            {activeFilter.type === 'none' 
+              ? (selectedPeriod === 'week' ? 'Diese Woche' : selectedPeriod === 'month' ? 'Dieser Monat' : 'Alle Aufgaben')
+              : `${filteredTasks.length} ${filteredTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'} gefunden`
+            }
           </p>
         </div>
         
