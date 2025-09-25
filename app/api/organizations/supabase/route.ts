@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
         organizations (
           id,
           name,
+          description,
           type,
           domain,
           created_at,
@@ -62,7 +63,8 @@ export async function POST(request: NextRequest) {
       .from('organizations')
       .insert({
         name,
-        type: type || 'COMPANY',
+        description: `Organisation ${name}`,
+        type: type === 'COMPANY' ? 'company' : 'team',
         domain,
         createdById: user.id,
       } as any)

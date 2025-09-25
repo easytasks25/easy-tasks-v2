@@ -35,7 +35,8 @@ model User {
 model Organization {
   id          String   @id @default(cuid())
   name        String
-  type        OrgType  @default(COMPANY)
+  description String?  // Optional: Beschreibung der Organisation
+  type        OrgType  @default(team)
   domain      String?  // Optional: "mueller-bau.de"
   settings    Json?    // Organisation-spezifische Einstellungen
   createdAt   DateTime @default(now())
@@ -251,8 +252,8 @@ model VoiceNote {
 
 // Enums
 enum OrgType {
-  COMPANY
-  PERSONAL
+  company
+  team
 }
 
 enum OrganizationRole {
