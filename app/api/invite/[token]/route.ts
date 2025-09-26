@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
+export const runtime = 'nodejs'
+
 const prisma = new PrismaClient()
 
 const acceptInvitationSchema = z.object({

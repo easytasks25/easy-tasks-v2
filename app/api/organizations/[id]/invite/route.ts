@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 import crypto from 'crypto'
 
+export const runtime = 'nodejs'
+
 const prisma = new PrismaClient()
 
 const inviteSchema = z.object({

@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 
+export const runtime = 'nodejs'
+
 const prisma = new PrismaClient()
 
 export async function GET(
