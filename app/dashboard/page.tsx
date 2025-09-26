@@ -36,6 +36,8 @@ const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(r => {
 })
 
 export default function DashboardPage() {
+  console.log('DASHBOARD: Component rendering...')
+  
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
@@ -63,6 +65,7 @@ export default function DashboardPage() {
   )
 
   useEffect(() => {
+    console.log('DASHBOARD: useEffect - checkUser called')
     checkUser()
   }, [])
 
@@ -73,12 +76,15 @@ export default function DashboardPage() {
   }, [user, selectedOrg])
 
   const checkUser = async () => {
+    console.log('DASHBOARD: checkUser started')
     try {
       // Erst Prisma-Session prüfen
       const prismaUser = getSession()
+      console.log('DASHBOARD: Prisma session check:', prismaUser)
       if (prismaUser) {
         console.log('DASHBOARD: Using Prisma session:', prismaUser)
         setUser(prismaUser)
+        setIsLoading(false)
         return
       }
 
@@ -103,8 +109,9 @@ export default function DashboardPage() {
 
       // Organisationen laden
       await loadOrganizations(authUser.id)
+      setIsLoading(false)
     } catch (error) {
-      console.error('Error checking user:', error)
+      console.error('DASHBOARD: Error checking user:', error)
       setIsLoading(false)
     }
   }
@@ -313,7 +320,9 @@ export default function DashboardPage() {
   }
 
   // Loading state
+  console.log('DASHBOARD: Loading state check - isLoading:', isLoading, 'dashboardLoading:', dashboardLoading)
   if (isLoading || dashboardLoading) {
+    console.log('DASHBOARD: Showing loading screen')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -391,7 +400,9 @@ export default function DashboardPage() {
   }
 
   // No user state
+  console.log('DASHBOARD: User state check - user:', user)
   if (!user) {
+    console.log('DASHBOARD: No user found, showing login prompt')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
