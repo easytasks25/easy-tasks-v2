@@ -38,80 +38,87 @@ export async function POST(request: NextRequest) {
     // Passwort hashen
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Benutzer erstellen
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      }
-    })
-
-    // Organisation erstellen
-    const organization = await prisma.organization.create({
-      data: {
-        name: organizationName,
-        type: organizationType === 'COMPANY' ? 'company' : 'team',
-        createdById: user.id,
-        settings: {
-          timezone: 'Europe/Berlin',
-          language: 'de',
-          dateFormat: 'DD.MM.YYYY'
-        }
-      }
-    })
-
-    // Benutzer als Owner zur Organisation hinzufügen
-    await prisma.userOrganization.create({
-      data: {
-        userId: user.id,
-        organizationId: organization.id,
-        role: 'OWNER'
-      }
-    })
-
-    // Standard-Projekt für die Organisation erstellen
-    const defaultProject = await prisma.project.create({
-      data: {
-        name: 'Standard-Projekt',
-        description: 'Standard-Projekt für die Organisation',
-        color: '#3b82f6',
-        organizationId: organization.id
-      }
-    })
-
-    // Standard-Buckets für die Organisation erstellen
-    const defaultBuckets = [
-      {
-        name: 'Heute',
-        type: 'TODAY' as const,
-        color: '#ef4444',
-        order: 0,
-      },
-      {
-        name: 'Morgen',
-        type: 'TOMORROW' as const,
-        color: '#f59e0b',
-        order: 1,
-      },
-      {
-        name: 'Diese Woche',
-        type: 'THIS_WEEK' as const,
-        color: '#3b82f6',
-        order: 2,
-      },
-    ]
-
-    for (const bucketData of defaultBuckets) {
-      await prisma.bucket.create({
+    // Alles in einer Transaktion erstellen
+    const result = await prisma.$transaction(async (tx) => {
+      // Benutzer erstellen
+      const user = await tx.user.create({
         data: {
-          ...bucketData,
-          userId: user.id,
-          organizationId: organization.id,
-          projectId: defaultProject.id,
+          name,
+          email,
+          password: hashedPassword,
         }
       })
-    }
+
+      // Organisation erstellen
+      const organization = await tx.organization.create({
+        data: {
+          name: organizationName,
+          type: organizationType === 'COMPANY' ? 'company' : 'team',
+          createdById: user.id,
+          settings: {
+            timezone: 'Europe/Berlin',
+            language: 'de',
+            dateFormat: 'DD.MM.YYYY'
+          }
+        }
+      })
+
+      // Benutzer als Owner zur Organisation hinzufügen
+      await tx.userOrganization.create({
+        data: {
+          userId: user.id,
+          organizationId: organization.id,
+          role: 'OWNER'
+        }
+      })
+
+      // Standard-Projekt für die Organisation erstellen
+      const defaultProject = await tx.project.create({
+        data: {
+          name: 'Standard-Projekt',
+          description: 'Standard-Projekt für die Organisation',
+          color: '#3b82f6',
+          organizationId: organization.id
+        }
+      })
+
+      // Standard-Buckets für die Organisation erstellen
+      const defaultBuckets = [
+        {
+          name: 'Heute',
+          type: 'TODAY' as const,
+          color: '#ef4444',
+          order: 0,
+        },
+        {
+          name: 'Morgen',
+          type: 'TOMORROW' as const,
+          color: '#f59e0b',
+          order: 1,
+        },
+        {
+          name: 'Diese Woche',
+          type: 'THIS_WEEK' as const,
+          color: '#3b82f6',
+          order: 2,
+        },
+      ]
+
+      for (const bucketData of defaultBuckets) {
+        await tx.bucket.create({
+          data: {
+            ...bucketData,
+            userId: user.id,
+            organizationId: organization.id,
+            projectId: defaultProject.id,
+          }
+        })
+      }
+
+      return { user, organization, defaultProject }
+    })
+
+    const { user, organization } = result
 
     // Passwort aus der Antwort entfernen
     const { password: _, ...userWithoutPassword } = user

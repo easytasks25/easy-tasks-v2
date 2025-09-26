@@ -47,63 +47,32 @@ export default function SignUpPage() {
       const supabase = createClient()
       
       // 1. Benutzer bei Supabase registrieren
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-          },
+      // 1. Registrierung über API (Prisma-basiert)
+      const registerResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          organizationName: data.organizationName,
+          organizationType: data.organizationType,
+        }),
       })
 
-      if (authError) {
-        throw new Error(authError.message)
+      const registerResult = await registerResponse.json()
+
+      if (!registerResponse.ok) {
+        throw new Error(registerResult.error || 'Registrierung fehlgeschlagen')
       }
 
-      if (!authData.user) {
-        throw new Error('Registrierung fehlgeschlagen')
-      }
-
-      // 2. Organisation erstellen
-      const orgResult = await (supabase
-        .from('organizations')
-        .insert({
-          name: data.organizationName,
-          type: data.organizationType === 'COMPANY' ? 'company' : 'team',
-          createdById: authData.user.id,
-        } as any)
-        .select()
-        .single() as any)
-
-      if (orgResult.error) {
-        console.error('Organization creation error:', orgResult.error)
-        throw new Error(`Fehler beim Erstellen der Organisation: ${orgResult.error.message}`)
-      }
-
-      if (!orgResult.data) {
-        throw new Error('Organisation konnte nicht erstellt werden')
-      }
-
-      const organization = orgResult.data
-
-      // 3. Benutzer als Owner zur Organisation hinzufügen
-      const { error: memberError } = await (supabase
-        .from('organization_members')
-        .insert({
-          user_id: authData.user.id,
-          organization_id: organization.id,
-          role: 'owner',
-        } as any) as any)
-
-      if (memberError) {
-        console.error('Error adding user to organization:', memberError)
-        throw new Error(`Fehler beim Hinzufügen zur Organisation: ${memberError.message}`)
-      }
+      const { user, organization } = registerResult
 
       setSuccess(true)
       
-      // 3. Weiterleitung zur App
+      // 2. Weiterleitung zur App
       setTimeout(() => {
         router.push('/dashboard')
       }, 2000)
