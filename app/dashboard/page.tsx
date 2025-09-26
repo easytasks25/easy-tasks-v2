@@ -119,6 +119,27 @@ export default function DashboardPage() {
     try {
       console.log('DASHBOARD: Loading organizations for user:', userId)
       
+      // Zuerst Guard-API prüfen
+      const guardResponse = await fetch('/api/debug/guard')
+      const guardResult = await guardResponse.json()
+      
+      console.log('DASHBOARD: Guard check result:', guardResult)
+      
+      if (!guardResponse.ok) {
+        console.error('DASHBOARD: Guard check failed:', guardResult)
+        setIsLoading(false)
+        return
+      }
+      
+      // Guard-Entscheidung prüfen
+      if (guardResult.guardDecision.shouldRedirectToCreate) {
+        console.log('DASHBOARD: Guard says redirect to create:', guardResult.guardDecision.reason)
+        setIsLoading(false)
+        router.push('/organizations/create')
+        return
+      }
+      
+      // Organisationen laden
       const response = await fetch('/api/organizations')
       const result = await response.json()
 
