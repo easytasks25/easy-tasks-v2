@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Registrierungsfehler:', error)
+    console.error('REGISTER_ERROR', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -142,14 +142,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Detaillierte Fehlerbehandlung für Debugging
+    // Temporär: Echten Fehler durchgeben für Debugging
     const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
     console.error('Detaillierter Fehler:', errorMessage)
 
     return NextResponse.json(
       { 
-        error: 'Interner Serverfehler',
-        details: errorMessage 
+        ok: false,
+        error: String(error)
       },
       { status: 500 }
     )
