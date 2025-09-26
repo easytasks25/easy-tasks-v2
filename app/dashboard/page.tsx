@@ -139,6 +139,11 @@ export default function DashboardPage() {
         setSelectedOrg(result.organizations[0])
         console.log('DASHBOARD: selectedOrg set to:', result.organizations[0])
         setIsLoading(false)
+        
+        // Debug: Prüfe ob selectedOrg wirklich gesetzt wurde
+        setTimeout(() => {
+          console.log('DASHBOARD: selectedOrg after timeout:', selectedOrg)
+        }, 100)
       } else {
         // Keine Organisationen - zur Erstellung weiterleiten
         console.log('DASHBOARD: No organizations found, redirecting to create')
@@ -413,6 +418,13 @@ export default function DashboardPage() {
 
   // No organization state
   if (!selectedOrg) {
+    // Temporäre Lösung: Prüfe ob Organisationen geladen wurden
+    if (organizations.length > 0) {
+      console.log('DASHBOARD: Organizations exist but selectedOrg is null, selecting first one')
+      setSelectedOrg(organizations[0])
+      return null // Re-render
+    }
+    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
