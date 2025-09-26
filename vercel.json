@@ -1,17 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "env": {
     "NEXTAUTH_URL": "https://easy-tasks-demo.vercel.app",
     "NEXTAUTH_SECRET": "your-secret-key-here"
