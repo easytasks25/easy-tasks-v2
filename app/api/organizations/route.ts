@@ -23,7 +23,8 @@ export async function GET() {
     // Organisationen des Users laden
     const userOrganizations = await prisma.userOrganization.findMany({
       where: {
-        userId: userId
+        userId: userId,
+        isActive: true  // Nur aktive Mitgliedschaften
       },
       include: {
         organization: true

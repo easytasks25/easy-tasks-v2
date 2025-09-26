@@ -136,20 +136,10 @@ export default function DashboardPage() {
         console.log('DASHBOARD: Selecting first organization:', result.organizations[0])
         setSelectedOrg(result.organizations[0])
       } else {
-        // Keine Organisationen - temporäre Lösung: Dummy-Organisation erstellen
-        console.log('DASHBOARD: No organizations found, creating dummy organization')
-        const dummyOrg = {
-          id: 'dummy-' + Date.now(),
-          name: 'Meine Organisation',
-          description: 'Standard-Organisation',
-          type: 'team',
-          userRole: 'OWNER',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        setOrganizations([dummyOrg])
-        setSelectedOrg(dummyOrg)
+        // Keine Organisationen - zur Erstellung weiterleiten
+        console.log('DASHBOARD: No organizations found, redirecting to create')
         setIsLoading(false)
+        router.push('/organizations/create')
         return
       }
     } catch (error) {
