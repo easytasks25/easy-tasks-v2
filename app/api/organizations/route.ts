@@ -18,12 +18,30 @@ export async function GET() {
     }
 
     const userId = session.user.id
-    console.log('ORGANIZATIONS_API: Loading organizations for user:', userId)
+    const userEmail = session.user.email
+    console.log('ORGANIZATIONS_API: Loading organizations for user ID:', userId, 'email:', userEmail)
+
+    // User über Email finden (falls ID nicht funktioniert)
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    })
+
+    if (!user && userEmail) {
+      console.log('ORGANIZATIONS_API: User not found by ID, trying email')
+      user = await prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true }
+      })
+    }
+
+    const actualUserId = user?.id || userId
+    console.log('ORGANIZATIONS_API: Using user ID:', actualUserId)
 
     // Organisationen des Users laden
     const userOrganizations = await prisma.userOrganization.findMany({
       where: {
-        userId: userId,
+        userId: actualUserId,
         isActive: true  // Nur aktive Mitgliedschaften
       },
       include: {

@@ -18,9 +18,13 @@ export async function GET() {
     }
 
     const userId = session.user.id
+    const userEmail = session.user.email
 
-    // User-Details laden
-    const user = await prisma.user.findUnique({
+    console.log('DEBUG_API: Session user ID:', userId)
+    console.log('DEBUG_API: Session user email:', userEmail)
+
+    // User-Details laden (versuche sowohl ID als auch Email)
+    let user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -30,10 +34,29 @@ export async function GET() {
       }
     })
 
-    // Organisationen des Users laden
+    // Falls User nicht über ID gefunden, versuche über Email
+    if (!user && userEmail) {
+      console.log('DEBUG_API: User not found by ID, trying email')
+      user = await prisma.user.findUnique({
+        where: { email: userEmail },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          createdAt: true
+        }
+      })
+    }
+
+    console.log('DEBUG_API: Found user:', user)
+
+    // Organisationen des Users laden (verwende die gefundene User-ID)
+    const actualUserId = user?.id || userId
+    console.log('DEBUG_API: Using user ID for organizations:', actualUserId)
+    
     const userOrganizations = await prisma.userOrganization.findMany({
       where: {
-        userId: userId,
+        userId: actualUserId,
         isActive: true  // Nur aktive Mitgliedschaften
       },
       include: {
