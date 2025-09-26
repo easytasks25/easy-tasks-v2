@@ -70,7 +70,6 @@ export default function SignUpPage() {
         .from('organizations')
         .insert({
           name: data.organizationName,
-          description: data.organizationType === 'COMPANY' ? 'Geschäftliche Organisation' : 'Privates Team',
           type: data.organizationType === 'COMPANY' ? 'company' : 'team',
           createdById: authData.user.id,
         } as any)
