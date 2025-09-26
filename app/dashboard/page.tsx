@@ -67,8 +67,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     console.log('DASHBOARD: useEffect - checkUser called')
-    checkUser()
-  }, [status, session])
+    if (status === 'authenticated' && session && !user) {
+      checkUser()
+    }
+  }, [status, session, user])
 
   useEffect(() => {
     if (user && selectedOrg) {
@@ -106,7 +108,7 @@ export default function DashboardPage() {
 
       // Organisationen laden
       await loadOrganizations(session.user.id)
-      setIsLoading(false)
+      // setIsLoading(false) wird in loadOrganizations gesetzt
     } catch (error) {
       console.error('DASHBOARD: Error checking user:', error)
       setIsLoading(false)
@@ -135,6 +137,8 @@ export default function DashboardPage() {
       if (result.organizations.length > 0) {
         console.log('DASHBOARD: Selecting first organization:', result.organizations[0])
         setSelectedOrg(result.organizations[0])
+        console.log('DASHBOARD: selectedOrg set to:', result.organizations[0])
+        setIsLoading(false)
       } else {
         // Keine Organisationen - zur Erstellung weiterleiten
         console.log('DASHBOARD: No organizations found, redirecting to create')
@@ -387,6 +391,9 @@ export default function DashboardPage() {
 
   // No user state
   console.log('DASHBOARD: User state check - user:', user)
+  console.log('DASHBOARD: selectedOrg state:', selectedOrg)
+  console.log('DASHBOARD: organizations state:', organizations)
+  
   if (!user) {
     console.log('DASHBOARD: No user found, showing login prompt')
     return (
