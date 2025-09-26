@@ -14,13 +14,16 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('LOGIN_API: Request received')
+    
     const body = await request.json()
+    console.log('LOGIN_API: Request body:', { email: body.email, hasPassword: !!body.password })
     
     // Validierung
     const validatedData = loginSchema.parse(body)
     const { email, password } = validatedData
 
-    console.log('LOGIN_ATTEMPT:', { email })
+    console.log('LOGIN_API: Validated data:', { email })
 
     // Benutzer in der Datenbank suchen
     const user = await prisma.user.findUnique({
