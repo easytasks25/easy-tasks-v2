@@ -6,8 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
-import { createClient } from '@/lib/supabase/client'
-import { setSession } from '@/lib/session'
+import { signIn } from 'next-auth/react'
 
 const signInSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -38,38 +37,26 @@ export default function SignInPage() {
     setError('')
 
     try {
-      // Login über API (Prisma-basiert)
-      console.log('LOGIN: Sending request to /api/auth/login')
-      
-      const loginResponse = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
+      // Login über NextAuth.js
+      console.log('LOGIN: Using NextAuth.js signIn')
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
       })
 
-      console.log('LOGIN: Response status:', loginResponse.status)
-      console.log('LOGIN: Response ok:', loginResponse.ok)
+      console.log('LOGIN: NextAuth result:', result)
 
-      const loginResult = await loginResponse.json()
-      console.log('LOGIN: Response data:', loginResult)
-
-      if (!loginResponse.ok) {
-        console.log('LOGIN: Error response:', loginResult)
-        setError(loginResult.error || 'Ungültige Anmeldedaten')
-      } else {
-        // Erfolgreiche Anmeldung
-        console.log('LOGIN: Login successful:', loginResult.user)
-        
-        // Session setzen für Dashboard
-        setSession(loginResult.user)
-        
+      if (result?.error) {
+        console.log('LOGIN: NextAuth error:', result.error)
+        setError('Ungültige Anmeldedaten')
+      } else if (result?.ok) {
+        console.log('LOGIN: NextAuth login successful')
         router.push('/dashboard')
         router.refresh()
+      } else {
+        console.log('LOGIN: Unexpected NextAuth result:', result)
+        setError('Ein Fehler ist aufgetreten')
       }
     } catch (error) {
       console.error('LOGIN: Catch error:', error)

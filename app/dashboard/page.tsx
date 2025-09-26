@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { getSession, clearSession } from '@/lib/session'
+import { useSession, signOut } from 'next-auth/react'
 import useSWR from 'swr'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/Dashboard'
@@ -38,6 +38,7 @@ const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(r => {
 export default function DashboardPage() {
   console.log('DASHBOARD: Component rendering...')
   
+  const { data: session, status } = useSession()
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
@@ -67,7 +68,7 @@ export default function DashboardPage() {
   useEffect(() => {
     console.log('DASHBOARD: useEffect - checkUser called')
     checkUser()
-  }, [])
+  }, [status, session])
 
   useEffect(() => {
     if (user && selectedOrg) {
@@ -77,38 +78,34 @@ export default function DashboardPage() {
 
   const checkUser = async () => {
     console.log('DASHBOARD: checkUser started')
+    console.log('DASHBOARD: NextAuth session status:', status)
+    console.log('DASHBOARD: NextAuth session data:', session)
+    
     try {
-      // Erst Prisma-Session prüfen
-      const prismaUser = getSession()
-      console.log('DASHBOARD: Prisma session check:', prismaUser)
-      if (prismaUser) {
-        console.log('DASHBOARD: Using Prisma session:', prismaUser)
-        setUser(prismaUser)
-        setIsLoading(false)
+      if (status === 'loading') {
+        console.log('DASHBOARD: NextAuth still loading...')
         return
       }
 
-      // Fallback: Supabase Auth prüfen
-      const { data: { user: authUser }, error } = await supabase.auth.getUser()
-      
-      if (error || !authUser) {
-        console.log('DASHBOARD: No valid session found, redirecting to login')
+      if (status === 'unauthenticated' || !session) {
+        console.log('DASHBOARD: No NextAuth session found, redirecting to login')
         router.push('/auth/signin')
         return
       }
 
-      // Benutzerdaten aus Supabase Auth extrahieren
+      // NextAuth Session gefunden
+      console.log('DASHBOARD: Using NextAuth session:', session.user)
       const userData: User = {
-        id: authUser.id,
-        email: authUser.email!,
-        name: authUser.user_metadata?.name || authUser.email!.split('@')[0],
-        avatar_url: authUser.user_metadata?.avatar_url
+        id: session.user.id,
+        email: session.user.email!,
+        name: session.user.name || session.user.email!.split('@')[0],
+        avatar_url: session.user.image
       }
 
       setUser(userData)
 
       // Organisationen laden
-      await loadOrganizations(authUser.id)
+      await loadOrganizations(session.user.id)
       setIsLoading(false)
     } catch (error) {
       console.error('DASHBOARD: Error checking user:', error)
@@ -302,8 +299,8 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
-      // Prisma-Session löschen
-      clearSession()
+      // NextAuth.js abmelden
+      await signOut({ redirect: false })
       
       // Supabase Auth auch abmelden (falls vorhanden)
       await supabase.auth.signOut()
