@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { createClient } from '@/lib/supabase/client'
+import { signIn } from 'next-auth/react'
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name muss mindestens 2 Zeichen haben'),
@@ -71,12 +72,29 @@ export default function SignUpPage() {
 
       const { user, organization } = registerResult
 
-      setSuccess(true)
-      
-      // 2. Weiterleitung zur App
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
+      // 2. User automatisch anmelden
+      console.log('REGISTER: Auto-login after registration')
+      const loginResult = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (loginResult?.ok) {
+        console.log('REGISTER: Auto-login successful')
+        setSuccess(true)
+        
+        // 3. Weiterleitung zur App
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
+      } else {
+        console.log('REGISTER: Auto-login failed, redirecting to signin')
+        setError('Registrierung erfolgreich, aber automatische Anmeldung fehlgeschlagen. Bitte melden Sie sich manuell an.')
+        setTimeout(() => {
+          router.push('/auth/signin')
+        }, 3000)
+      }
     } catch (error) {
       console.error('Registration error:', error)
       

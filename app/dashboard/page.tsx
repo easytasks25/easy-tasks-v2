@@ -115,38 +115,23 @@ export default function DashboardPage() {
 
   const loadOrganizations = async (userId: string) => {
     try {
-      const { data: memberships, error } = await supabase
-        .from('organization_members')
-        .select(`
-          role,
-          organizations (
-            id,
-            name,
-            description,
-            type,
-            domain,
-            created_at,
-            updated_at
-          )
-        ` as any)
-        .eq('user_id', userId)
+      console.log('DASHBOARD: Loading organizations for user:', userId)
+      
+      const response = await fetch('/api/organizations')
+      const result = await response.json()
 
-      if (error) {
-        console.error('Error loading organizations:', error)
+      if (!response.ok) {
+        console.error('Error loading organizations:', result)
         setIsLoading(false)
         return
       }
 
-      const orgs = memberships?.map((membership: any) => ({
-        ...membership.organizations,
-        userRole: membership.role,
-      })) || []
-
-      setOrganizations(orgs)
+      console.log('DASHBOARD: Organizations loaded:', result.organizations)
+      setOrganizations(result.organizations)
 
       // Erste Organisation automatisch auswählen
-      if (orgs.length > 0) {
-        setSelectedOrg(orgs[0])
+      if (result.organizations.length > 0) {
+        setSelectedOrg(result.organizations[0])
       } else {
         // Keine Organisationen - zur Erstellung weiterleiten
         setIsLoading(false)
