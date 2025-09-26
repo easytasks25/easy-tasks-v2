@@ -18,6 +18,7 @@ export async function GET() {
     }
 
     const userId = session.user.id
+    console.log('ORGANIZATIONS_API: Loading organizations for user:', userId)
 
     // Organisationen des Users laden
     const userOrganizations = await prisma.userOrganization.findMany({
@@ -29,6 +30,8 @@ export async function GET() {
       }
     })
 
+    console.log('ORGANIZATIONS_API: Raw userOrganizations:', userOrganizations)
+
     const organizations = userOrganizations.map(uo => ({
       id: uo.organization.id,
       name: uo.organization.name,
@@ -38,6 +41,8 @@ export async function GET() {
       createdAt: uo.organization.createdAt,
       updatedAt: uo.organization.updatedAt
     }))
+
+    console.log('ORGANIZATIONS_API: Processed organizations:', organizations)
 
     return NextResponse.json({ 
       ok: true, 

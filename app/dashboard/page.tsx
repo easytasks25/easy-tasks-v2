@@ -120,8 +120,10 @@ export default function DashboardPage() {
       const response = await fetch('/api/organizations')
       const result = await response.json()
 
+      console.log('DASHBOARD: Organizations API response:', { status: response.status, result })
+
       if (!response.ok) {
-        console.error('Error loading organizations:', result)
+        console.error('DASHBOARD: Error loading organizations:', result)
         setIsLoading(false)
         return
       }
@@ -131,11 +133,23 @@ export default function DashboardPage() {
 
       // Erste Organisation automatisch auswählen
       if (result.organizations.length > 0) {
+        console.log('DASHBOARD: Selecting first organization:', result.organizations[0])
         setSelectedOrg(result.organizations[0])
       } else {
-        // Keine Organisationen - zur Erstellung weiterleiten
+        // Keine Organisationen - temporäre Lösung: Dummy-Organisation erstellen
+        console.log('DASHBOARD: No organizations found, creating dummy organization')
+        const dummyOrg = {
+          id: 'dummy-' + Date.now(),
+          name: 'Meine Organisation',
+          description: 'Standard-Organisation',
+          type: 'team',
+          userRole: 'OWNER',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        setOrganizations([dummyOrg])
+        setSelectedOrg(dummyOrg)
         setIsLoading(false)
-        router.push('/organizations/create')
         return
       }
     } catch (error) {
