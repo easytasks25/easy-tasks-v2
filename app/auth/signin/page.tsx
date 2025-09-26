@@ -34,16 +34,25 @@ export default function SignInPage() {
     setError('')
 
     try {
-      const supabase = createClient()
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+      // Login über API (Prisma-basiert)
+      const loginResponse = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       })
 
-      if (error) {
-        setError('Ungültige Anmeldedaten')
+      const loginResult = await loginResponse.json()
+
+      if (!loginResponse.ok) {
+        setError(loginResult.error || 'Ungültige Anmeldedaten')
       } else {
         // Erfolgreiche Anmeldung
+        console.log('Login successful:', loginResult.user)
         router.push('/dashboard')
         router.refresh()
       }
