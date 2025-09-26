@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
@@ -6,19 +8,23 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    // NextAuth.js Session prüfen
+    const session = await getServerSession(authOptions)
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ ok: false, reason: 'unauthorized' }, { status: 401 })
     }
+
+    const supabase = createClient()
+    
+    // User-ID aus NextAuth Session verwenden
+    const userId = session.user.id
 
     // Aktuelle Organisation ermitteln
     const membershipResult = await (supabase
       .from('organization_members')
       .select('organization_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .limit(1)
       .single() as any)
 
