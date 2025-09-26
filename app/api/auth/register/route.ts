@@ -126,7 +126,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Benutzer erfolgreich erstellt',
-        user: userWithoutPassword 
+        user: userWithoutPassword,
+        organization: organization
       },
       { status: 201 }
     )
@@ -141,8 +142,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Detaillierte Fehlerbehandlung für Debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
+    console.error('Detaillierter Fehler:', errorMessage)
+
     return NextResponse.json(
-      { error: 'Interner Serverfehler' },
+      { 
+        error: 'Interner Serverfehler',
+        details: errorMessage 
+      },
       { status: 500 }
     )
   }

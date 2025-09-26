@@ -65,7 +65,8 @@ export default function SignUpPage() {
       const registerResult = await registerResponse.json()
 
       if (!registerResponse.ok) {
-        throw new Error(registerResult.error || 'Registrierung fehlgeschlagen')
+        const errorMsg = registerResult.details || registerResult.error || 'Registrierung fehlgeschlagen'
+        throw new Error(errorMsg)
       }
 
       const { user, organization } = registerResult
