@@ -99,7 +99,7 @@ export default function DashboardPage() {
         id: session.user.id,
         email: session.user.email!,
         name: session.user.name || session.user.email!.split('@')[0],
-        avatar_url: session.user.image
+        avatar_url: session.user.image || undefined
       }
 
       setUser(userData)
