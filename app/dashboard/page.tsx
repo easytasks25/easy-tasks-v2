@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSession, clearSession } from '@/lib/session'
 import useSWR from 'swr'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/Dashboard'
@@ -73,9 +74,19 @@ export default function DashboardPage() {
 
   const checkUser = async () => {
     try {
+      // Erst Prisma-Session prüfen
+      const prismaUser = getSession()
+      if (prismaUser) {
+        console.log('DASHBOARD: Using Prisma session:', prismaUser)
+        setUser(prismaUser)
+        return
+      }
+
+      // Fallback: Supabase Auth prüfen
       const { data: { user: authUser }, error } = await supabase.auth.getUser()
       
       if (error || !authUser) {
+        console.log('DASHBOARD: No valid session found, redirecting to login')
         router.push('/auth/signin')
         return
       }
@@ -284,7 +295,12 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
+      // Prisma-Session löschen
+      clearSession()
+      
+      // Supabase Auth auch abmelden (falls vorhanden)
       await supabase.auth.signOut()
+      
       router.push('/')
     } catch (error) {
       console.error('Error signing out:', error)

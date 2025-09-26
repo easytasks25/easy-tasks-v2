@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { createClient } from '@/lib/supabase/client'
+import { setSession } from '@/lib/session'
 
 const signInSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
@@ -63,6 +64,10 @@ export default function SignInPage() {
       } else {
         // Erfolgreiche Anmeldung
         console.log('LOGIN: Login successful:', loginResult.user)
+        
+        // Session setzen für Dashboard
+        setSession(loginResult.user)
+        
         router.push('/dashboard')
         router.refresh()
       }
