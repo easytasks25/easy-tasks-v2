@@ -28,7 +28,7 @@ async function main() {
     create: {
       id: 'demo-org-1',
       name: 'easy-tasks Demo',
-      type: OrgType.COMPANY,
+      type: OrgType.company,
       createdById: demoUser.id,
     },
   })

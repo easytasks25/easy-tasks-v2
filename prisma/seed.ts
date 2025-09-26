@@ -1,4 +1,4 @@
-import { PrismaClient, ProjectRole, BucketType, OrgType } from '@prisma/client'
+import { PrismaClient, ProjectRole, BucketType, OrgType, TaskPriority, TaskStatus } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -31,7 +31,7 @@ async function main() {
     create: {
       id: 'default-org',
       name: 'easy tasks Demo',
-      type: OrgType.COMPANY,
+      type: OrgType.company,
       createdById: demoUser.id,
     },
   })
@@ -146,20 +146,20 @@ async function main() {
     {
       title: 'Willkommen bei easy-tasks!',
       description: 'Erkunden Sie die App und erstellen Sie Ihre erste Aufgabe.',
-      priority: 'HIGH' as const,
-      status: 'PENDING' as const,
+      priority: TaskPriority.HIGH,
+      status: TaskStatus.PENDING,
     },
     {
       title: 'App auf dem Handy installieren',
       description: 'Tippen Sie auf "Zum Startbildschirm hinzufügen" für die beste Erfahrung.',
-      priority: 'MEDIUM' as const,
-      status: 'PENDING' as const,
+      priority: TaskPriority.MEDIUM,
+      status: TaskStatus.PENDING,
     },
     {
       title: 'Team einladen',
       description: 'Laden Sie Ihre Kollegen ein, um gemeinsam Aufgaben zu verwalten.',
-      priority: 'LOW' as const,
-      status: 'PENDING' as const,
+      priority: TaskPriority.LOW,
+      status: TaskStatus.PENDING,
     },
   ]
 
