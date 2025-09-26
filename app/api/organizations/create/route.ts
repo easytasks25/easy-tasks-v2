@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 type Body = { 
   name: string
@@ -12,13 +14,14 @@ type Body = {
 
 export async function POST(req: Request) {
   try {
-    const supabase = createClient()
+    // NextAuth.js Session prüfen
+    const session = await getServerSession(authOptions)
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     }
+
+    const userId = session.user.id
 
     const { name, type, domain } = (await req.json()) as Body
 
@@ -38,14 +41,14 @@ export async function POST(req: Request) {
           name: name.trim(),
           type: type === 'COMPANY' ? 'company' : 'team',
           domain: domain || null,
-          createdById: user.id
+          createdById: userId
         }
       })
 
       // Benutzer als Owner hinzufügen
       await tx.userOrganization.create({
         data: {
-          userId: user.id,
+          userId: userId,
           organizationId: organization.id,
           role: 'OWNER'
         }
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
       await tx.bucket.createMany({
         data: buckets.map(bucket => ({
           ...bucket,
-          userId: user.id,
+          userId: userId,
           organizationId: organization.id
         }))
       })
